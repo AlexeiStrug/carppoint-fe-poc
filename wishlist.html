@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ulubione — CarpPoint.pl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,400..700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+.wl-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 26px; }
+.wl-head h1 { font-size: clamp(28px,3.4vw,40px); }
+.wl-head .sub { color: var(--ink-500); margin-top: 6px; }
+</style>
+</head>
+<body>
+<div id="site-header"></div>
+
+<div class="wrap" style="padding-block:8px 72px">
+  <nav class="crumb"><a href="index.html">Główna</a><span class="sep">/</span><b>Ulubione</b></nav>
+  <div class="wl-head">
+    <div>
+      <h1>Lista ulubionych</h1>
+      <p class="sub" id="wlSub"></p>
+    </div>
+    <div id="wlActions" style="display:none">
+      <button class="btn btn-primary" id="addAll"></button>
+    </div>
+  </div>
+  <div id="wlBody"></div>
+</div>
+
+<section class="section tint" id="recoSec" style="display:none">
+  <div class="wrap">
+    <div class="section-head"><div><span class="eyebrow">Może Cię zainteresować</span><h2 class="h2" style="margin-top:8px">Polecane dla Ciebie</h2></div></div>
+    <div class="grid-products cols-4" id="recoGrid"></div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+CP.init('');
+
+function render(){
+  const ids = CP.getWish();
+  const items = ids.map(id=>CP.products.find(p=>p.id===id)).filter(Boolean);
+  document.getElementById('wlSub').textContent = items.length? items.length+' produktów zapisanych' : 'Zapisuj produkty, klikając serce na karcie.';
+  const body = document.getElementById('wlBody');
+  if(!items.length){
+    body.innerHTML = `<div class="empty-state" style="padding:64px 20px">${CP.icon('heart','ico')}<p style="font-weight:700;color:var(--ink-800);font-size:18px;margin-bottom:6px">Brak ulubionych produktów</p><p class="small" style="margin-bottom:20px">Przeglądaj katalog i dodawaj produkty do listy ulubionych.</p><a class="btn btn-primary btn-lg" href="catalog.html">Przeglądaj katalog</a></div>`;
+    document.getElementById('wlActions').style.display='none';
+    document.getElementById('recoSec').style.display='';
+    CP.renderGrid('#recoGrid', CP.products.filter(p=>p.reviews>100).slice(0,4));
+    return;
+  }
+  document.getElementById('recoSec').style.display='none';
+  document.getElementById('wlActions').style.display='';
+  document.getElementById('addAll').innerHTML = CP.icon('cart','ico')+' Dodaj wszystkie do koszyka';
+  body.innerHTML = `<div class="grid-products cols-4">${items.map(CP.card).join('')}</div>`;
+}
+CP.onWishChange = render;
+document.getElementById('addAll').addEventListener('click', ()=>{
+  const c = CP.getCart(); let n=0;
+  CP.getWish().forEach(id=>{
+    const p=CP.products.find(x=>x.id===id); if(!p||p.stock==='out') return;
+    const key=id+'|'; const ex=c.find(i=>i.key===key);
+    if(ex) ex.qty++; else c.push({key,id,name:p.name,brand:p.brand,price:p.price,label:p.label,variant:'',qty:1});
+    n++;
+  });
+  localStorage.setItem('cp_cart_v1', JSON.stringify(c)); CP.updateCount();
+  CP.toast(n+' produktów dodano do koszyka','ok'); CP.openCart();
+});
+render();
+</script>
+</body>
+</html>

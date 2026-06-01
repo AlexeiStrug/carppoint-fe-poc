@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moje konto — CarpPoint.pl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,400..700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+.co-card2 { background:#fff; border:1px solid var(--ink-200); border-radius: var(--r-lg); padding: 26px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid .full { grid-column:1/-1; }
+@media (max-width: 520px){ .form-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="site-header"></div>
+
+<div class="wrap">
+  <nav class="crumb"><a href="index.html">Główna</a><span class="sep">/</span><b>Moje konto</b></nav>
+
+  <div class="acct-layout">
+    <!-- SIDEBAR -->
+    <aside class="acct-side">
+      <div class="acct-user">
+        <div class="acct-av" id="avatar">JK</div>
+        <div><b id="uName">Jan Kowalski</b><span id="uEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="fa909b94ba9f829b978a969fd4999597">[email&#160;protected]</a></span></div>
+      </div>
+      <nav class="acct-nav" id="acctNav">
+        <button data-tab="overview" class="active"></button>
+        <button data-tab="orders"></button>
+        <button data-tab="wishlist"></button>
+        <button data-tab="profile"></button>
+        <button data-tab="address"></button>
+        <button class="logout" onclick="CP.toast('Wylogowano')"></button>
+      </nav>
+    </aside>
+
+    <!-- PANES -->
+    <main>
+      <!-- OVERVIEW -->
+      <section class="acct-pane active" data-pane="overview">
+        <h1 class="acct-h">Cześć, Jan 👋</h1>
+        <p class="acct-sub">Witaj z powrotem. Oto przegląd Twojego konta.</p>
+        <div class="metric-row" id="metrics"></div>
+        <div class="section-head" style="margin-bottom:16px"><h2 class="h3">Ostatnie zamówienie</h2><button class="link" data-goto="orders" style="background:none;border:none;cursor:pointer;font:inherit;color:var(--brand-700);font-weight:700">Wszystkie zamówienia</button></div>
+        <div id="lastOrder"></div>
+      </section>
+
+      <!-- ORDERS -->
+      <section class="acct-pane" data-pane="orders">
+        <h1 class="acct-h">Moje zamówienia</h1>
+        <p class="acct-sub">Historia i status Twoich zamówień.</p>
+        <div id="ordersList"></div>
+      </section>
+
+      <!-- WISHLIST -->
+      <section class="acct-pane" data-pane="wishlist">
+        <h1 class="acct-h">Ulubione</h1>
+        <p class="acct-sub">Produkty zapisane na później.</p>
+        <div id="wlMini"></div>
+      </section>
+
+      <!-- PROFILE -->
+      <section class="acct-pane" data-pane="profile">
+        <h1 class="acct-h">Dane osobowe</h1>
+        <p class="acct-sub">Zaktualizuj swoje dane kontaktowe.</p>
+        <div class="co-card2" style="max-width:560px">
+          <form onsubmit="CP.toast('Dane zapisane','ok');return false">
+            <div class="form-grid">
+              <div class="field"><label>Imię</label><input class="input" value="Jan"></div>
+              <div class="field"><label>Nazwisko</label><input class="input" value="Kowalski"></div>
+              <div class="field full"><label>E-mail</label><input class="input" type="email" value="jan.kowalski@example.com"></div>
+              <div class="field full"><label>Telefon</label><input class="input" type="tel" value="+48 600 123 456"></div>
+              <div class="full" style="margin-top:6px"><button class="btn btn-primary" type="submit">Zapisz zmiany</button></div>
+            </div>
+          </form>
+          <hr class="divider" style="margin:24px 0">
+          <h3 class="h3" style="font-size:18px;margin-bottom:14px">Zmień hasło</h3>
+          <form onsubmit="CP.toast('Hasło zmienione','ok');return false">
+            <div class="form-grid">
+              <div class="field full"><label>Obecne hasło</label><input class="input" type="password" placeholder="••••••••"></div>
+              <div class="field"><label>Nowe hasło</label><input class="input" type="password" placeholder="••••••••"></div>
+              <div class="field"><label>Powtórz hasło</label><input class="input" type="password" placeholder="••••••••"></div>
+              <div class="full" style="margin-top:6px"><button class="btn btn-outline" type="submit">Zmień hasło</button></div>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ADDRESSES -->
+      <section class="acct-pane" data-pane="address">
+        <div class="section-head" style="margin-bottom:20px"><div><h1 class="acct-h">Adresy</h1><p class="acct-sub" style="margin-bottom:0">Zarządzaj adresami dostawy.</p></div><button class="btn btn-outline" onclick="CP.toast('Formularz nowego adresu')">+ Dodaj adres</button></div>
+        <div class="info-row">
+          <div class="addr-card default">
+            <h4>Dom</h4>
+            <p>Jan Kowalski<br>ul. Wędkarska 12<br>00-123 Warszawa<br>+48 600 123 456</p>
+            <div class="acts"><a href="#" onclick="CP.toast('Edycja adresu');return false">Edytuj</a><a href="#" onclick="CP.toast('Usunięto adres');return false" style="color:var(--ink-400)">Usuń</a></div>
+          </div>
+          <div class="addr-card">
+            <h4>Praca</h4>
+            <p>Jan Kowalski<br>ul. Spinningowa 8/3<br>02-456 Warszawa<br>+48 600 123 456</p>
+            <div class="acts"><a href="#" onclick="CP.toast('Edycja adresu');return false">Edytuj</a><a href="#" onclick="CP.toast('Ustawiono jako domyślny','ok');return false">Ustaw domyślny</a></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div id="site-footer"></div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+CP.init('');
+const u = CP.user;
+document.getElementById('uName').textContent = u.name;
+document.getElementById('uEmail').textContent = u.email;
+document.getElementById('avatar').textContent = u.name.split(' ').map(x=>x[0]).join('');
+
+// nav labels + icons
+const NAVTABS = [
+  ['overview','grid','Przegląd'],['orders','box','Zamówienia'],['wishlist','heart','Ulubione'],
+  ['profile','user','Dane osobowe'],['address','pin','Adresy'],
+];
+document.querySelectorAll('#acctNav button[data-tab]').forEach(b=>{
+  const t = NAVTABS.find(x=>x[0]===b.dataset.tab);
+  b.innerHTML = CP.icon(t[1],'ico')+'<span>'+t[2]+'</span>';
+});
+document.querySelector('#acctNav .logout').innerHTML = CP.icon('refresh','ico')+'<span>Wyloguj</span>';
+
+function go(tab){
+  document.querySelectorAll('#acctNav button[data-tab]').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.acct-pane').forEach(p=>p.classList.toggle('active', p.dataset.pane===tab));
+  if(tab==='wishlist') renderWishMini();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('acctNav').addEventListener('click', e=>{ const b=e.target.closest('button[data-tab]'); if(b) go(b.dataset.tab); });
+document.addEventListener('click', e=>{ const g=e.target.closest('[data-goto]'); if(g) go(g.getAttribute('data-goto')); });
+// deep-link via ?tab=
+const qtab = new URLSearchParams(location.search).get('tab'); if(qtab) go(qtab);
+
+// metrics
+const spent = CP.orders.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+o.total,0);
+document.getElementById('metrics').innerHTML = [
+  ['Zamówienia', CP.orders.length],
+  ['Wydano łącznie', CP.price(spent)],
+  ['Ulubione', CP.wishCount()],
+].map(([l,v])=>`<div class="metric"><div class="ml">${l}</div><div class="mv">${v}</div></div>`).join('');
+
+// order card builder
+function orderCard(o){
+  const [label,kind] = CP.orderStatus[o.status];
+  const thumbs = o.items.slice(0,4).map(id=>{ const p=CP.products.find(x=>x.id===id)||{}; return `<div class="ph" data-label="${CP.esc(p.label||'')}"></div>`; }).join('');
+  const track = o.tracking? `<button class="btn btn-outline btn-sm" onclick="CP.toast('Śledzenie: ${o.tracking}')">Śledź paczkę</button>`:'';
+  return `<div class="order-card">
+    <div class="order-top">
+      <div><span class="onum">#${o.num}</span> <span class="odate">· ${o.date}</span></div>
+      <span class="st-pill st-${kind}">${label}</span>
+    </div>
+    <div class="order-mid">
+      <div class="order-thumbs">${thumbs}</div>
+      <span class="small muted">${o.items.length} ${o.items.length===1?'produkt':'produkty'} · ${o.carrier}</span>
+    </div>
+    <div class="order-bot">
+      <span class="tot">${CP.price(o.total)}</span>
+      <div class="order-actions">
+        ${track}
+        <button class="btn btn-brand btn-sm" onclick="CP.toast('Szczegóły zamówienia #${o.num}')">Szczegóły</button>
+      </div>
+    </div>
+  </div>`;
+}
+document.getElementById('ordersList').innerHTML = CP.orders.map(orderCard).join('');
+document.getElementById('lastOrder').innerHTML = orderCard(CP.orders[0]);
+
+// wishlist mini
+function renderWishMini(){
+  const items = CP.getWish().map(id=>CP.products.find(p=>p.id===id)).filter(Boolean);
+  const el = document.getElementById('wlMini');
+  if(!items.length){ el.innerHTML = `<div class="empty-state" style="padding:50px 20px">${CP.icon('heart','ico')}<p style="font-weight:600;color:var(--ink-700);margin-bottom:14px">Brak ulubionych produktów</p><a class="btn btn-primary" href="catalog.html">Przeglądaj katalog</a></div>`; return; }
+  el.innerHTML = `<div class="grid-products cols-3" style="margin-bottom:20px">${items.map(CP.card).join('')}</div><a class="btn btn-outline" href="wishlist.html">Otwórz pełną listę ulubionych</a>`;
+}
+CP.onWishChange = ()=>{ renderWishMini(); document.querySelectorAll('#metrics .metric')[2].querySelector('.mv').textContent = CP.wishCount(); };
+</script>
+</body>
+</html>

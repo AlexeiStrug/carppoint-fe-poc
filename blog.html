@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poradnik wędkarski — CarpPoint.pl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,400..700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+.blog-hero { background: var(--brand-50); border-bottom: 1px solid var(--ink-150); }
+.blog-hero .wrap { padding-block: 30px 36px; }
+.blog-hero h1 { font-size: clamp(30px,4vw,46px); }
+.blog-hero p { color: var(--ink-600); margin-top: 10px; max-width: 56ch; font-size: 17px; }
+.blog-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 22px; }
+
+.feature-post { display: grid; grid-template-columns: 1.15fr 1fr; gap: 0; border: 1px solid var(--ink-200); border-radius: var(--r-xl); overflow: hidden; margin-bottom: 44px; }
+.feature-post .media { position: relative; min-height: 320px; }
+.feature-post .media .ph { position: absolute; inset: 0; }
+.feature-post .body { padding: clamp(24px,3vw,44px); display: flex; flex-direction: column; justify-content: center; }
+.feature-post .body h2 { font-size: clamp(24px,2.6vw,34px); margin: 14px 0 14px; }
+.feature-post .body p { color: var(--ink-600); font-size: 16px; margin-bottom: 22px; }
+@media (max-width: 800px){ .feature-post { grid-template-columns: 1fr; } .feature-post .media { min-height: 220px; } }
+
+.post-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 26px; }
+@media (max-width: 900px){ .post-grid { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 560px){ .post-grid { grid-template-columns: 1fr; } }
+.post { display: flex; flex-direction: column; }
+.post .media { position: relative; aspect-ratio: 16/10; border-radius: var(--r-lg); overflow: hidden; }
+.post .media .ph { position: absolute; inset: 0; transition: transform .35s; }
+.post:hover .media .ph { transform: scale(1.05); }
+.post .tag-line { display: flex; gap: 10px; align-items: center; margin: 14px 0 8px; }
+.post-cat { font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--brand-600); }
+.post .meta { font-size: 12.5px; color: var(--ink-400); }
+.post h3 { font-size: 18px; line-height: 1.3; margin-bottom: 8px; }
+.post:hover h3 { color: var(--brand-700); }
+.post p { font-size: 14px; color: var(--ink-500); line-height: 1.55; }
+.post .read { margin-top: 12px; font-size: 13.5px; font-weight: 700; color: var(--brand-700); display: inline-flex; align-items: center; gap: 6px; }
+.post:hover .read { gap: 9px; }
+
+.news-cta { background: var(--brand-900); border-radius: var(--r-xl); padding: clamp(30px,4vw,56px); text-align: center; color: #fff; }
+.news-cta h2 { color: #fff; font-size: clamp(24px,3vw,34px); }
+.news-cta p { color: var(--brand-100); margin: 12px auto 24px; max-width: 46ch; }
+.news-cta .newsletter-form { max-width: 440px; margin: 0 auto; }
+</style>
+</head>
+<body>
+<div id="site-header"></div>
+
+<section class="blog-hero">
+  <div class="wrap">
+    <nav class="crumb" style="padding-top:0"><a href="index.html">Główna</a><span class="sep">/</span><b>Poradnik</b></nav>
+    <h1>Poradnik wędkarski</h1>
+    <p>Praktyczna wiedza od zespołu CarpPoint — czynnych wędkarzy. Dobór sprzętu, techniki, sezonowe porady i recenzje.</p>
+    <div class="blog-tabs" id="blogTabs"></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <article class="feature-post" id="featurePost"></article>
+    <div class="section-head"><div><span class="eyebrow">Najnowsze wpisy</span><h2 class="h2" style="margin-top:8px">Z bloga</h2></div></div>
+    <div class="post-grid" id="postGrid"></div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="news-cta">
+      <span class="eyebrow" style="color:var(--brand-200)">Newsletter</span>
+      <h2 style="margin-top:10px">Łów więcej, czytaj pierwszy</h2>
+      <p>Porady, testy sprzętu i kody rabatowe raz w tygodniu. Bez spamu.</p>
+      <form class="newsletter-form" onsubmit="CP.toast('Zapisano na newsletter','ok');return false">
+        <input type="email" placeholder="Twój e-mail" required>
+        <button class="btn btn-primary" type="submit">Zapisz się</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+CP.init('blog');
+
+const POSTS = [
+  { cat:'Karp', date:'28 maja 2025', read:'8 min', label:'kulki na wiosnę', title:'Jak dobrać kulki proteinowe na wczesną wiosnę', excerpt:'Zimna woda zmienia metabolizm karpia. Podpowiadamy, jakie aromaty i średnice sprawdzą się, gdy ryby dopiero budzą się po zimie.' },
+  { cat:'Spinning', date:'21 maja 2025', read:'6 min', label:'gumy na okonia', title:'Spinning na szczupaka — przewodnik po przynętach', excerpt:'Woblery, gumy, błystki — kiedy i co stosować. Przegląd przynęt na każdy sezon i typ łowiska.' },
+  { cat:'Feeder', date:'14 maja 2025', read:'7 min', label:'method feeder', title:'Method feeder dla początkujących', excerpt:'Kompletny zestaw, dobór koszyczka i zanęty oraz pierwsze zacięcie. Wszystko, czego potrzebujesz na start.' },
+  { cat:'Poradnik', date:'7 maja 2025', read:'5 min', label:'węzły wędkarskie', title:'5 węzłów wędkarskich, które musisz znać', excerpt:'Od węzła Palomar po pętlę no-knot. Mocne, sprawdzone połączenia do plecionki i fluorocarbonu.' },
+  { cat:'Karp', date:'30 kwietnia 2025', read:'10 min', label:'zestaw karpiowy', title:'Zestaw karpiowy krok po kroku', excerpt:'Od wędki i kołowrotka po sygnalizatory i markę. Jak skompletować pierwszy zestaw na karpia bez przepłacania.' },
+  { cat:'Sezon', date:'18 kwietnia 2025', read:'6 min', label:'sprzęt zimowy', title:'Wędkarstwo zimowe — sprzęt i techniki', excerpt:'Mormiszki, balansiry i bezpieczeństwo na lodzie. Praktyczny przewodnik po łowieniu w mróz.' },
+];
+const FEATURE = { cat:'Przewodnik', date:'1 czerwca 2025', read:'12 min', label:'sesja karpiowa nad jeziorem', title:'Sesja karpiowa 48h — jak przygotować się do wyjazdu', excerpt:'Lista sprzętu, taktyka nęcenia, rozkład markerowania łowiska i organizacja biwaku. Kompletny przewodnik po weekendowej sesji na dużym zbiorniku.' };
+
+// tabs
+const cats = ['Wszystkie', ...Array.from(new Set(POSTS.map(p=>p.cat)))];
+document.getElementById('blogTabs').innerHTML = cats.map((c,i)=>`<button class="tab ${i===0?'active':''}" data-c="${c}">${c}</button>`).join('');
+document.getElementById('blogTabs').addEventListener('click', e=>{ const t=e.target.closest('.tab'); if(!t)return; document.querySelectorAll('#blogTabs .tab').forEach(x=>x.classList.remove('active')); t.classList.add('active'); renderPosts(t.dataset.c); });
+
+function postCard(p){
+  return `<a class="post" href="blog.html">
+    <div class="media"><span class="ph" data-label="${CP.esc(p.label)}"></span></div>
+    <div class="tag-line"><span class="post-cat">${p.cat}</span><span class="meta">· ${p.date} · ${p.read}</span></div>
+    <h3>${p.title}</h3>
+    <p>${p.excerpt}</p>
+    <span class="read">Czytaj dalej ${CP.icon('arrow','ico')}</span>
+  </a>`;
+}
+function renderPosts(filter){
+  const list = (!filter||filter==='Wszystkie')? POSTS : POSTS.filter(p=>p.cat===filter);
+  document.getElementById('postGrid').innerHTML = list.map(postCard).join('');
+}
+renderPosts();
+
+document.getElementById('featurePost').innerHTML = `
+  <div class="media"><span class="ph ph-dark" data-label="${CP.esc(FEATURE.label)}"></span></div>
+  <div class="body">
+    <div class="tag-line"><span class="badge badge-new">Wyróżnione</span><span class="meta">· ${FEATURE.date} · ${FEATURE.read} czytania</span></div>
+    <h2>${FEATURE.title}</h2>
+    <p>${FEATURE.excerpt}</p>
+    <div><a class="btn btn-brand btn-lg" href="blog.html">Czytaj artykuł</a></div>
+  </div>`;
+</script>
+</body>
+</html>

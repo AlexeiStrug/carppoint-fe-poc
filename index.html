@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CarpPoint.pl — sklep wędkarski online</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,400..700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+/* ---- hero ---- */
+.hero { position: relative; background: var(--brand-900); color: #fff; overflow: hidden; }
+.hero .ph-dark { position: absolute; inset: 0; }
+.hero-grad { position: absolute; inset: 0; background: linear-gradient(100deg, rgba(17,38,28,.96) 0%, rgba(17,38,28,.86) 38%, rgba(17,38,28,.45) 70%, rgba(17,38,28,.2) 100%); }
+.hero .wrap { position: relative; z-index: 2; min-height: 540px; display: flex; align-items: center; padding-block: 60px; }
+.hero-copy { max-width: 600px; }
+.hero h1 { color: #fff; font-size: clamp(36px, 5.4vw, 62px); margin: 18px 0 18px; }
+.hero h1 em { font-style: normal; color: var(--brand-200); }
+.hero .lead { color: var(--brand-100); max-width: 46ch; }
+.hero-cta { display: flex; gap: 12px; margin-top: 30px; flex-wrap: wrap; }
+.hero-stats { display: flex; gap: 30px; margin-top: 40px; flex-wrap: wrap; }
+.hero-stats .st b { font-family: var(--font-display); font-size: 30px; color: #fff; display: block; line-height: 1; }
+.hero-stats .st span { font-size: 13px; color: var(--brand-200); }
+.hero-dots { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 3; display: flex; gap: 8px; }
+.hero-dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.35); }
+.hero-dots i.on { width: 26px; border-radius: 5px; background: var(--accent-500); }
+@media (max-width: 600px){ .hero .wrap { min-height: 440px; } }
+
+/* category tiles */
+.cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+@media (max-width: 900px){ .cat-grid { grid-template-columns: repeat(3,1fr); } }
+@media (max-width: 620px){ .cat-grid { grid-template-columns: repeat(2,1fr); gap: 12px; } }
+.cat-tile { position: relative; aspect-ratio: 1/1; border-radius: var(--r-lg); overflow: hidden; display: block; }
+.cat-tile .ph { position: absolute; inset: 0; }
+.cat-tile .ov { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(17,38,28,.82) 6%, rgba(17,38,28,.18) 58%, rgba(17,38,28,.04) 100%); transition: background .2s; }
+.cat-tile:hover .ov { background: linear-gradient(0deg, rgba(17,38,28,.86) 10%, rgba(45,106,79,.34) 70%); }
+.cat-tile .lbl { position: absolute; left: 14px; right: 14px; bottom: 13px; z-index: 2; color: #fff; }
+.cat-tile .lbl b { font-family: var(--font-display); font-size: clamp(15px,1.6vw,18px); display: block; }
+.cat-tile .lbl span { font-size: 12px; color: var(--brand-100); font-family: var(--font-mono); }
+.cat-tile .ico-badge { position: absolute; top: 12px; left: 12px; z-index: 2; width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,.16); backdrop-filter: blur(4px); display: grid; place-items: center; color: #fff; }
+.cat-tile .ico-badge svg { width: 19px; height: 19px; }
+.cat-tile:hover .ph { transform: scale(1.05); transition: transform .4s; }
+
+/* promo band */
+.promo { background: var(--accent-50); border-radius: var(--r-xl); overflow: hidden; display: grid; grid-template-columns: 1.1fr .9fr; }
+.promo-text { padding: clamp(28px, 4vw, 52px); }
+.promo-text h2 { color: var(--accent-700); }
+.promo-media { position: relative; min-height: 300px; }
+.promo-media .ph { position: absolute; inset: 0; }
+@media (max-width: 760px){ .promo { grid-template-columns: 1fr; } .promo-media { min-height: 200px; } }
+
+/* brand strip */
+.brand-strip { display: flex; flex-wrap: wrap; gap: 12px 30px; align-items: center; justify-content: center; }
+.brand-strip .bw { font-family: var(--font-display); font-weight: 700; font-size: clamp(17px,2vw,24px); color: var(--ink-300); letter-spacing: -.01em; transition: color .15s; }
+.brand-strip .bw:hover { color: var(--brand-700); }
+
+/* trust / value props small */
+.value-band { display: grid; grid-template-columns: repeat(3,1fr); gap: 22px; }
+@media (max-width: 760px){ .value-band { grid-template-columns: 1fr; } }
+.vp { display: flex; gap: 14px; align-items: flex-start; }
+.vp .vp-ic { width: 46px; height: 46px; border-radius: 12px; background: var(--brand-50); color: var(--brand-700); display: grid; place-items: center; flex: none; }
+.vp .vp-ic svg { width: 23px; height: 23px; }
+.vp b { display: block; font-size: 16px; color: var(--brand-900); font-family: var(--font-display); }
+.vp p { font-size: 14px; color: var(--ink-500); margin-top: 3px; }
+</style>
+</head>
+<body>
+<div id="site-header"></div>
+
+<!-- HERO -->
+<section class="hero" data-screen-label="Hero">
+  <div class="ph-dark" data-label="lifestyle: brzask nad jeziorem, namiot karpiowy"></div>
+  <div class="hero-grad"></div>
+  <div class="wrap">
+    <div class="hero-copy fade-up">
+      <span class="eyebrow" style="color:var(--brand-200)">Sezon 2025 · nowa kolekcja</span>
+      <h1>Sprzęt wędkarski dla <em>prawdziwych</em> pasjonatów</h1>
+      <p class="lead">Kulki proteinowe, wędki, kołowrotki i przynęty od sprawdzonych marek. Szybka wysyłka z polskiego magazynu — Paczkomat InPost już od 9,99 zł.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary btn-lg" href="catalog.html?cat=karp">Zobacz katalog</a>
+        <a class="btn btn-onfilm btn-lg" href="catalog.html?promo=1">Promocje tygodnia</a>
+      </div>
+      <div class="hero-stats">
+        <div class="st"><b>2 500+</b><span>produktów w ofercie</span></div>
+        <div class="st"><b>24/7</b><span>odbiór w Paczkomacie</span></div>
+        <div class="st"><b>4,8★</b><span>na podstawie 6 200 opinii</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-dots"><i class="on"></i><i></i><i></i></div>
+</section>
+
+<!-- FEATURES STRIP -->
+<section class="features">
+  <div class="wrap">
+    <div class="feat" id="feat-truck"></div>
+    <div class="feat" id="feat-pin"></div>
+    <div class="feat" id="feat-refresh"></div>
+    <div class="feat" id="feat-shield"></div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Kategorie</span>
+        <h2 class="h2" style="margin-top:8px">Przeglądaj według działu</h2>
+      </div>
+      <a class="link" href="catalog.html">Cały katalog</a>
+    </div>
+    <div class="cat-grid" id="catGrid"></div>
+  </div>
+</section>
+
+<!-- BESTSELLERS -->
+<section class="section tint" data-screen-label="Bestsellery">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Najczęściej kupowane</span>
+        <h2 class="h2" style="margin-top:8px">Bestsellery</h2>
+      </div>
+      <a class="link" href="catalog.html">Zobacz wszystkie</a>
+    </div>
+    <div class="tabs" id="bestTabs" style="margin-bottom:26px">
+      <button class="tab active" data-f="all">Wszystkie</button>
+      <button class="tab" data-f="Karp">Karp</button>
+      <button class="tab" data-f="Przynęty spinningowe">Spinning</button>
+      <button class="tab" data-f="Zanęty">Zanęty</button>
+    </div>
+    <div class="grid-products cols-4" id="bestGrid"></div>
+  </div>
+</section>
+
+<!-- PROMO BAND -->
+<section class="section">
+  <div class="wrap">
+    <div class="promo">
+      <div class="promo-text">
+        <span class="badge badge-sale">Wyprzedaż</span>
+        <h2 class="h2" style="margin:14px 0 12px">Do −40% na wybrane kulki i przynęty</h2>
+        <p class="lead" style="color:var(--ink-600);max-width:40ch">Tylko do końca tygodnia. Uzupełnij zapasy na sezon zanim znikną z magazynu.</p>
+        <a class="btn btn-primary btn-lg" href="catalog.html?promo=1" style="margin-top:22px">Sprawdź ofertę</a>
+      </div>
+      <div class="promo-media"><div class="ph" data-label="product: kulki proteinowe + pop-upy"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- NEW ARRIVALS -->
+<section class="section tint">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Świeżo na półce</span>
+        <h2 class="h2" style="margin-top:8px">Nowości</h2>
+      </div>
+      <a class="link" href="catalog.html">Zobacz wszystkie</a>
+    </div>
+    <div class="grid-products cols-4" id="newGrid"></div>
+  </div>
+</section>
+
+<!-- VALUE PROPS -->
+<section class="section">
+  <div class="wrap">
+    <div class="value-band" id="valueBand"></div>
+  </div>
+</section>
+
+<!-- BRAND STRIP -->
+<section class="section tint" style="padding-block:48px">
+  <div class="wrap">
+    <p class="eyebrow center" style="margin-bottom:22px">Zaufały nam marki</p>
+    <div class="brand-strip" id="brandStrip"></div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+  CP.init('');
+
+  // features strip
+  const feats = {
+    'feat-truck':['truck','Dostawa InPost','już od 9,99 zł'],
+    'feat-pin':['pin','Paczkomat 24/7','3 500+ punktów'],
+    'feat-refresh':['refresh','30 dni na zwrot','bez podawania przyczyny'],
+    'feat-shield':['shield','Gwarancja','oryginalny sprzęt'],
+  };
+  Object.entries(feats).forEach(([id,[i,a,b]])=>{
+    document.getElementById(id).innerHTML = CP.icon(i,'ico')+`<div><b>${a}</b><span>${b}</span></div>`;
+  });
+
+  // category tiles
+  document.getElementById('catGrid').innerHTML = CP.tiles.map(t=>`
+    <a class="cat-tile" href="catalog.html?cat=${t.slug}">
+      <span class="ph" data-label="${CP.esc(t.label)}"></span>
+      <span class="ico-badge">${CP.icon((CP.categories.find(c=>c.slug===t.slug)||{}).icon||'box')}</span>
+      <span class="ov"></span>
+      <span class="lbl"><b>${t.name}</b><span>${t.count}</span></span>
+    </a>`).join('');
+
+  // bestsellers + tabs
+  const best = CP.products.filter(p=>p.reviews>60);
+  function renderBest(f){
+    const list = f==='all'? best : best.filter(p=>p.cat===f);
+    CP.renderGrid('#bestGrid', list.slice(0,8));
+  }
+  renderBest('all');
+  document.getElementById('bestTabs').addEventListener('click', e=>{
+    const t=e.target.closest('.tab'); if(!t) return;
+    document.querySelectorAll('#bestTabs .tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active'); renderBest(t.dataset.f);
+  });
+
+  // new arrivals
+  CP.renderGrid('#newGrid', CP.products.filter(p=>p.isNew).slice(0,4).concat(CP.products.slice(0,4)).slice(0,4));
+
+  // value props
+  document.getElementById('valueBand').innerHTML = [
+    ['box','Sprawdzony sprzęt','Tylko oryginalne produkty od autoryzowanych dystrybutorów.'],
+    ['spark','Doradztwo wędkarskie','Nasz zespół to czynni wędkarze — pomożemy dobrać zestaw.'],
+    ['shield','Bezpieczne zakupy','Przelewy24, BLIK i karty. Płatność szyfrowana SSL.'],
+  ].map(([i,b,p])=>`<div class="vp"><span class="vp-ic">${CP.icon(i)}</span><div><b>${b}</b><p>${p}</p></div></div>`).join('');
+
+  // brands
+  document.getElementById('brandStrip').innerHTML = CP.brands.slice(0,9).map(b=>`<a class="bw" href="catalog.html">${b}</a>`).join('');
+</script>
+</body>
+</html>

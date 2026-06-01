@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Produkt — CarpPoint.pl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,400..700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+.pdp { display: grid; grid-template-columns: 55fr 45fr; gap: 48px; align-items: start; padding-block: 8px 64px; }
+@media (max-width: 900px){ .pdp { grid-template-columns: 1fr; gap: 32px; } }
+
+/* gallery */
+.gallery { position: sticky; top: calc(var(--header-h) + 12px); }
+.gal-main { position: relative; aspect-ratio: 1/1; border: 1px solid var(--ink-200); border-radius: var(--r-lg); overflow: hidden; }
+.gal-main .ph { position: absolute; inset: 0; transition: transform .3s ease; }
+.gal-main:hover .ph { transform: scale(1.08); }
+.gal-zoom { position: absolute; top: 12px; right: 12px; z-index: 3; width: 38px; height: 38px; border-radius: var(--r-pill); background: rgba(255,255,255,.92); border: 1px solid var(--ink-200); display: grid; place-items: center; color: var(--ink-600); }
+.gal-badge { position: absolute; top: 12px; left: 12px; z-index: 3; }
+.gal-thumbs { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 12px; }
+.gal-thumb { aspect-ratio: 1/1; border: 1.5px solid var(--ink-200); border-radius: var(--r-md); overflow: hidden; cursor: pointer; position: relative; }
+.gal-thumb.on { border-color: var(--brand-700); }
+.gal-thumb .ph { position: absolute; inset: 0; }
+.gal-thumb .ph::after { font-size: 8px; padding: 2px 4px; }
+
+/* info */
+.pdp-brand { font-family: var(--font-mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--brand-600); }
+.pdp-title { font-size: clamp(26px,3vw,34px); margin: 10px 0 14px; }
+.pdp-rate { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-600); }
+.pdp-rate a { color: var(--brand-600); font-weight: 600; }
+.pdp-price { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: 22px 0; margin: 22px 0; border-top: 1px solid var(--ink-200); border-bottom: 1px solid var(--ink-200); }
+.pdp-price .now { font-family: var(--font-display); font-size: 38px; font-weight: 800; color: var(--accent-600); letter-spacing: -.02em; }
+.pdp-price .was { font-size: 19px; color: var(--ink-400); text-decoration: line-through; }
+.pdp-price .vat { font-size: 12.5px; color: var(--ink-500); width: 100%; margin-top: 2px; }
+
+.var-group { margin-bottom: 22px; }
+.var-group .lbl { font-size: 13.5px; font-weight: 700; color: var(--ink-700); margin-bottom: 10px; display: flex; gap: 8px; }
+.var-group .lbl span { color: var(--ink-500); font-weight: 500; }
+.var-opts { display: flex; gap: 9px; flex-wrap: wrap; }
+.var-opt { padding: 9px 16px; border: 1.5px solid var(--ink-300); border-radius: var(--r-md); font-size: 14px; font-weight: 600; color: var(--ink-800); background: #fff; transition: .15s; }
+.var-opt:hover { border-color: var(--brand-500); }
+.var-opt.on { background: var(--brand-800); border-color: var(--brand-800); color: #fff; }
+.var-opt.off { opacity: .4; text-decoration: line-through; cursor: not-allowed; }
+
+.buy-row { display: flex; gap: 12px; align-items: stretch; margin-bottom: 12px; }
+.buy-row .stepper { height: 52px; }
+.buy-row .stepper button { height: 52px; width: 48px; }
+.buy-row .stepper input { height: 52px; }
+.buy-row .btn { flex: 1; height: 52px; }
+.buy-now { height: 52px; }
+.wish-link { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-600); font-weight: 600; font-size: 14px; background: none; border: none; padding: 12px 0; }
+.wish-link:hover { color: var(--accent-600); }
+.wish-link .ico { width: 18px; height: 18px; }
+
+.delivery-box { background: var(--ink-50); border: 1px solid var(--ink-150); border-radius: var(--r-lg); padding: 18px 20px; margin-top: 18px; display: grid; gap: 14px; }
+.dl-item { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--ink-700); }
+.dl-item .ico { width: 20px; height: 20px; color: var(--brand-700); flex: none; }
+.dl-item b { color: var(--ink-900); font-weight: 600; }
+
+/* accordion specs */
+.acc { border-top: 1px solid var(--ink-200); margin-top: 28px; }
+.acc details { border-bottom: 1px solid var(--ink-200); }
+.acc summary { list-style: none; cursor: pointer; padding: 18px 2px; font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--brand-900); display: flex; justify-content: space-between; align-items: center; }
+.acc summary::-webkit-details-marker { display: none; }
+.acc summary .chev { color: var(--ink-400); transition: transform .2s; }
+.acc details[open] summary .chev { transform: rotate(180deg); }
+.acc .acc-body { padding: 4px 2px 22px; color: var(--ink-700); line-height: 1.7; }
+.spec-table { width: 100%; border-collapse: collapse; }
+.spec-table td { padding: 11px 4px; border-bottom: 1px solid var(--ink-150); font-size: 14.5px; vertical-align: top; }
+.spec-table td:first-child { color: var(--ink-500); width: 42%; }
+.spec-table td:last-child { color: var(--ink-900); font-weight: 500; }
+
+/* reviews */
+.rev-summary { display: grid; grid-template-columns: 200px 1fr; gap: 36px; align-items: center; padding: 26px; background: var(--ink-50); border-radius: var(--r-lg); margin-bottom: 30px; }
+@media (max-width:600px){ .rev-summary { grid-template-columns: 1fr; gap: 20px; } }
+.rev-big { text-align: center; }
+.rev-big .num { font-family: var(--font-display); font-size: 56px; font-weight: 800; color: var(--brand-900); line-height: 1; }
+.rev-big .stars { font-size: 18px; margin: 8px 0 4px; }
+.rev-bars { display: grid; gap: 8px; }
+.rev-bar { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-600); }
+.rev-bar .track { flex: 1; height: 8px; background: var(--ink-200); border-radius: 4px; overflow: hidden; }
+.rev-bar .fill { height: 100%; background: #E8A013; border-radius: 4px; }
+.rev-card { display: flex; gap: 14px; padding: 20px 0; border-bottom: 1px solid var(--ink-150); }
+.rev-av { width: 44px; height: 44px; border-radius: 50%; background: var(--brand-100); color: var(--brand-800); display: grid; place-items: center; font-weight: 700; flex: none; font-family: var(--font-display); }
+.rev-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.rev-meta b { font-size: 14.5px; }
+.rev-meta .when { font-size: 12.5px; color: var(--ink-400); }
+.rev-vbadge { font-size: 11px; font-weight: 700; color: var(--brand-700); background: var(--brand-50); padding: 2px 8px; border-radius: var(--r-sm); }
+.rev-card .stars { font-size: 13px; margin: 6px 0; }
+.rev-card p { font-size: 14.5px; color: var(--ink-700); line-height: 1.6; }
+</style>
+</head>
+<body>
+<div id="site-header"></div>
+
+<div class="wrap">
+  <nav class="crumb" id="crumb"></nav>
+
+  <div class="pdp">
+    <!-- GALLERY -->
+    <div class="gallery">
+      <div class="gal-main">
+        <div class="ph" id="galMain"></div>
+        <span class="gal-badge badge badge-sale" id="galBadge"></span>
+        <button class="gal-zoom" aria-label="Powiększ"></button>
+      </div>
+      <div class="gal-thumbs" id="galThumbs"></div>
+    </div>
+
+    <!-- INFO -->
+    <div class="info">
+      <span class="pdp-brand" id="pBrand"></span>
+      <h1 class="pdp-title" id="pTitle"></h1>
+      <div class="pdp-rate">
+        <span class="stars" id="pStars"></span>
+        <span id="pRateText"></span>
+        <a href="#reviews">zobacz opinie</a>
+      </div>
+
+      <div class="pdp-price">
+        <span class="now" id="pNow"></span>
+        <span class="was" id="pWas"></span>
+        <span class="badge badge-sale" id="pDisc"></span>
+        <span class="vat">Cena zawiera VAT · darmowa dostawa od 200 zł</span>
+      </div>
+
+      <div class="var-group">
+        <div class="lbl">Średnica: <span id="diaVal"></span></div>
+        <div class="var-opts" id="diaOpts"></div>
+      </div>
+      <div class="var-group">
+        <div class="lbl">Opakowanie: <span id="packVal"></span></div>
+        <div class="var-opts" id="packOpts"></div>
+      </div>
+
+      <div class="buy-row">
+        <div class="stepper" aria-label="Ilość">
+          <button id="qd" aria-label="mniej">−</button>
+          <input id="qv" value="1" readonly>
+          <button id="qi" aria-label="więcej">+</button>
+        </div>
+        <button class="btn btn-primary" id="addBtn"></button>
+      </div>
+      <button class="btn btn-brand btn-block buy-now" id="buyNow">Kup teraz</button>
+      <button class="wish-link" id="wishBtn"></button>
+
+      <div class="delivery-box" id="deliveryBox"></div>
+
+      <!-- accordions -->
+      <div class="acc">
+        <details open>
+          <summary>Opis <span class="chev"></span></summary>
+          <div class="acc-body" id="descBody"></div>
+        </details>
+        <details>
+          <summary>Specyfikacja <span class="chev"></span></summary>
+          <div class="acc-body"><table class="spec-table" id="specTable"></table></div>
+        </details>
+        <details>
+          <summary>Dostawa i zwroty <span class="chev"></span></summary>
+          <div class="acc-body">
+            <p>Wysyłka w 24h od zaksięgowania wpłaty. Dostawa Paczkomat InPost od 9,99 zł, kurier DPD od 14,99 zł. Darmowa dostawa dla zamówień powyżej 200 zł.</p>
+            <p style="margin-top:10px">Masz 30 dni na zwrot bez podawania przyczyny. Produkt musi być nieużywany, w oryginalnym opakowaniu.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEWS -->
+<section class="section tint" id="reviews" data-screen-label="Opinie">
+  <div class="wrap" style="max-width:980px">
+    <h2 class="h2" style="margin-bottom:26px">Opinie klientów</h2>
+    <div class="rev-summary">
+      <div class="rev-big">
+        <div class="num" id="revNum"></div>
+        <div class="stars" id="revStars" style="--pct:96%"></div>
+        <div class="small muted" id="revCount"></div>
+      </div>
+      <div class="rev-bars" id="revBars"></div>
+    </div>
+    <div id="revList"></div>
+    <div style="text-align:center;margin-top:26px">
+      <button class="btn btn-outline">Napisz opinię</button>
+    </div>
+  </div>
+</section>
+
+<!-- RELATED -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><div><span class="eyebrow">Dobierz do zestawu</span><h2 class="h2" style="margin-top:8px">Klienci kupili też</h2></div><a class="link" href="catalog.html?cat=karp">Więcej z kategorii</a></div>
+    <div class="grid-products cols-4" id="relGrid"></div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+CP.init('karp');
+const d = CP.detail;
+const id = +(new URLSearchParams(location.search).get('id')||d.id);
+// if a different product was clicked, build a lightweight detail from card data
+let prod = d;
+if(id !== d.id){
+  const base = CP.products.find(p=>p.id===id);
+  if(base){
+    prod = Object.assign({}, d, {
+      id:base.id, name:base.name, brand:base.brand, cat:base.cat, catSlug:base.catSlug,
+      price:base.price, was:base.was, rating:base.rating, reviews:base.reviews, stock:base.stock,
+      short:"Sprawdzony wybór wędkarzy CarpPoint. Wysoka jakość wykonania i niezawodność w każdych warunkach.",
+      thumbs:[base.label,"detal","opakowanie","w użyciu"],
+      packs:[{l:"sztuka", v:base.price}], diameters:[],
+      sku:"CP-"+String(base.id).padStart(4,'0')
+    });
+  }
+}
+
+document.querySelector('.gal-zoom').innerHTML = CP.icon('zoom','ico');
+
+// breadcrumb
+document.getElementById('crumb').innerHTML =
+  `<a href="index.html">Główna</a><span class="sep">/</span><a href="catalog.html?cat=${prod.catSlug}">${prod.cat}</a><span class="sep">/</span><b>${CP.esc(prod.name)}</b>`;
+
+// gallery
+document.getElementById('galMain').setAttribute('data-label', prod.thumbs[0]);
+document.getElementById('galThumbs').innerHTML = prod.thumbs.map((t,i)=>`<div class="gal-thumb ${i===0?'on':''}" data-i="${i}"><div class="ph" data-label="${CP.esc(t)}"></div></div>`).join('');
+document.getElementById('galThumbs').addEventListener('click', e=>{
+  const t=e.target.closest('.gal-thumb'); if(!t) return;
+  document.querySelectorAll('.gal-thumb').forEach(x=>x.classList.remove('on')); t.classList.add('on');
+  document.getElementById('galMain').setAttribute('data-label', prod.thumbs[+t.dataset.i]);
+});
+
+// info
+const sale = prod.was && prod.was>prod.price;
+document.getElementById('pBrand').textContent = prod.brand;
+document.getElementById('pTitle').textContent = prod.name;
+document.getElementById('pStars').style.setProperty('--pct', (prod.rating/5*100)+'%');
+document.getElementById('pRateText').textContent = prod.rating.toFixed(1).replace('.',',')+' ('+prod.reviews+' opinii)';
+function setPrice(p){
+  document.getElementById('pNow').textContent = CP.price(p);
+  document.getElementById('pWas').textContent = sale? CP.price(prod.was):'';
+  document.getElementById('pWas').style.display = sale?'':'none';
+  if(sale){ document.getElementById('pDisc').textContent='−'+Math.round((1-prod.price/prod.was)*100)+'%'; }
+  else document.getElementById('pDisc').style.display='none';
+  document.getElementById('pNow').classList.toggle('sale', sale);
+  if(!sale) document.getElementById('pNow').style.color='var(--brand-800)';
+}
+setPrice(prod.price);
+
+// variants
+let selDia = prod.diameters && prod.diameters.length? (prod.diameters.includes('20mm')?'20mm':prod.diameters[0]):null;
+let selPack = prod.packs[0];
+function renderDia(){
+  const g=document.querySelector('.var-group'); // first
+  if(!prod.diameters || !prod.diameters.length){ g.style.display='none'; return; }
+  document.getElementById('diaVal').textContent=selDia;
+  document.getElementById('diaOpts').innerHTML = prod.diameters.map(x=>`<button class="var-opt ${x===selDia?'on':''} ${x==='24mm'?'off':''}" data-dia="${x}" ${x==='24mm'?'disabled':''}>${x}</button>`).join('');
+}
+function renderPack(){
+  document.getElementById('packVal').textContent=selPack.l;
+  document.getElementById('packOpts').innerHTML = prod.packs.map((x,i)=>`<button class="var-opt ${x.l===selPack.l?'on':''}" data-pack="${i}">${x.l} · ${CP.price(x.v)}</button>`).join('');
+}
+renderDia(); renderPack();
+document.getElementById('diaOpts').addEventListener('click',e=>{ const b=e.target.closest('[data-dia]'); if(!b||b.disabled)return; selDia=b.dataset.dia; renderDia(); });
+document.getElementById('packOpts').addEventListener('click',e=>{ const b=e.target.closest('[data-pack]'); if(!b)return; selPack=prod.packs[+b.dataset.pack]; renderPack(); setPrice(selPack.v); });
+
+// qty + add
+let qty=1;
+document.getElementById('qi').addEventListener('click',()=>{ qty++; document.getElementById('qv').value=qty; });
+document.getElementById('qd').addEventListener('click',()=>{ qty=Math.max(1,qty-1); document.getElementById('qv').value=qty; });
+document.getElementById('addBtn').innerHTML = CP.icon('cart','ico')+' Dodaj do koszyka';
+function variantStr(){ const parts=[]; if(selDia) parts.push(selDia); if(prod.packs.length>1) parts.push(selPack.l); return parts.join(' · '); }
+function doAdd(){
+  const c = CP.getCart(); const key=prod.id+'|'+variantStr();
+  const ex=c.find(i=>i.key===key);
+  if(ex) ex.qty+=qty; else c.push({key, id:prod.id, name:prod.name, brand:prod.brand, price:selPack.v, label:prod.thumbs[0], variant:variantStr(), qty});
+  localStorage.setItem('cp_cart_v1', JSON.stringify(c)); CP.updateCount();
+  CP.toast(prod.brand+' — dodano do koszyka','ok'); CP.openCart();
+}
+document.getElementById('addBtn').addEventListener('click', doAdd);
+document.getElementById('buyNow').addEventListener('click', ()=>{ doAdd(); setTimeout(()=>location.href='checkout.html',300); });
+function syncWishBtn(){ const on=CP.inWish(prod.id); const b=document.getElementById('wishBtn'); b.innerHTML = CP.icon('heart','ico')+(on?' W ulubionych':' Dodaj do ulubionych'); b.classList.toggle('on',on); b.style.color=on?'var(--accent-600)':''; }
+syncWishBtn();
+document.getElementById('wishBtn').addEventListener('click', function(){ CP.toggleWish(prod.id); syncWishBtn(); });
+
+// delivery
+document.getElementById('deliveryBox').innerHTML = [
+  ['truck','<b>Dostawa InPost</b> od 9,99 zł'],
+  ['box','Odbiór w Paczkomacie 24/7'],
+  ['refresh','30 dni na zwrot'],
+  ['shield','Gwarancja producenta'],
+].map(([i,t])=>`<div class="dl-item">${CP.icon(i,'ico')}<span>${t}</span></div>`).join('');
+
+// description + specs
+document.getElementById('descBody').innerHTML = `<p>${prod.short}</p>`+(prod===d?`<p style="margin-top:12px">Kulki produkowane w małych partiach z najwyższej jakości składników. Mączka rybna premium i naturalny ekstrakt kałamarnicy tworzą intensywny, długo uwalniany profil zapachowy, który skutecznie przyciąga duże karpie nawet w trudnych, zimnych warunkach.</p>`:'');
+document.getElementById('specTable').innerHTML = prod.specs.map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('');
+
+// reviews
+document.getElementById('revNum').textContent = prod.rating.toFixed(1).replace('.',',');
+document.getElementById('revStars').style.setProperty('--pct',(prod.rating/5*100)+'%');
+document.getElementById('revCount').textContent = prod.reviews+' opinii';
+const dist=[78,16,4,1,1];
+document.getElementById('revBars').innerHTML = dist.map((pct,i)=>`<div class="rev-bar"><span style="width:40px">${5-i} ★</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><span style="width:36px;text-align:right">${pct}%</span></div>`).join('');
+document.getElementById('revList').innerHTML = prod.reviewsList.map(r=>`
+  <div class="rev-card">
+    <div class="rev-av">${r.who.split(' ').map(x=>x[0]).join('')}</div>
+    <div style="flex:1">
+      <div class="rev-meta"><b>${r.who}</b><span class="when">${r.when}</span>${r.v?'<span class="rev-vbadge">Zakup potwierdzony</span>':''}</div>
+      <span class="stars" style="--pct:${r.r/5*100}%"></span>
+      <p>${r.t}</p>
+    </div>
+  </div>`).join('');
+
+// related
+CP.renderGrid('#relGrid', CP.products.filter(p=>p.id!==prod.id && (p.catSlug===prod.catSlug || p.tags.includes('Atraktory'))).slice(0,4));
+</script>
+</body>
+</html>

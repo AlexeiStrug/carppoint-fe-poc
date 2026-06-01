@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Katalog — CarpPoint.pl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,400..700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+.cat-layout { display: grid; grid-template-columns: 282px 1fr; gap: 36px; align-items: start; padding-block: 8px 72px; }
+@media (max-width: 980px){ .cat-layout { grid-template-columns: 1fr; } }
+
+/* sidebar */
+.filters { position: sticky; top: calc(var(--header-h) + 12px); }
+.filters-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; padding-bottom: 14px; border-bottom: 1px solid var(--ink-200); }
+.filters-head h3 { font-size: 18px; }
+.filters-head .clear { font-size: 13px; color: var(--brand-600); font-weight: 600; }
+.filters-head .clear:hover { color: var(--accent-600); }
+.facet { border-bottom: 1px solid var(--ink-150); padding: 6px 0; }
+.facet > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 12px 2px; font-weight: 600; font-size: 14.5px; color: var(--ink-900); }
+.facet > summary::-webkit-details-marker { display: none; }
+.facet > summary .chev { transition: transform .2s; color: var(--ink-400); }
+.facet[open] > summary .chev { transform: rotate(180deg); }
+.facet-body { padding: 4px 2px 16px; display: flex; flex-direction: column; gap: 10px; }
+.facet .check { font-size: 14px; justify-content: space-between; width: 100%; }
+.facet .check .cnt { color: var(--ink-400); font-size: 12.5px; font-family: var(--font-mono); }
+.facet .check > span:first-of-type { display: inline-flex; gap: 9px; align-items: center; }
+.brand-search input { margin-bottom: 4px; }
+.show-more { font-size: 13px; color: var(--brand-600); font-weight: 600; background: none; border: none; padding: 4px 0; text-align: left; }
+.show-more:hover { color: var(--accent-600); }
+
+/* price range */
+.range-wrap { padding-top: 4px; }
+.range-track { position: relative; height: 4px; background: var(--ink-200); border-radius: 4px; margin: 14px 6px 18px; }
+.range-fill { position: absolute; height: 100%; background: var(--brand-600); border-radius: 4px; }
+.range-wrap input[type=range] { -webkit-appearance: none; appearance: none; position: absolute; width: calc(100% - 12px); left: 6px; top: 6px; background: none; pointer-events: none; height: 0; }
+.range-wrap input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; pointer-events: auto; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 2px solid var(--brand-600); box-shadow: var(--sh-card); cursor: pointer; }
+.range-wrap input[type=range]::-moz-range-thumb { pointer-events: auto; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 2px solid var(--brand-600); cursor: pointer; }
+.range-inputs { display: flex; align-items: center; gap: 8px; }
+.range-inputs .input { padding: 8px 10px; font-size: 14px; text-align: center; }
+.range-inputs span { color: var(--ink-400); }
+
+.toggle { position: relative; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--ink-800); }
+.toggle input { display: none; }
+.toggle .tr { width: 40px; height: 23px; border-radius: 999px; background: var(--ink-300); position: relative; transition: background .18s; flex: none; }
+.toggle .tr::after { content: ""; position: absolute; top: 2.5px; left: 2.5px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .18s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.toggle input:checked + .tr { background: var(--brand-700); }
+.toggle input:checked + .tr::after { transform: translateX(17px); }
+
+.rate-opt { display: flex; align-items: center; gap: 9px; cursor: pointer; padding: 5px 0; font-size: 14px; color: var(--ink-700); }
+.rate-opt input { accent-color: var(--brand-700); }
+
+/* main */
+.cat-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+.cat-top .count { font-size: 14.5px; color: var(--ink-600); }
+.cat-top .count b { color: var(--ink-900); font-weight: 700; }
+.cat-top .right { display: flex; align-items: center; gap: 10px; }
+.cat-top .select { width: auto; min-width: 190px; }
+.pills-row { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+.pills-row .clear-all { font-size: 13px; color: var(--brand-600); font-weight: 600; }
+
+.filter-btn { display: none; }
+@media (max-width: 980px){
+  .filter-btn { display: inline-flex; }
+  .cat-layout > .filters { display: none; }
+}
+.drawer .filters { display: block; position: static; }
+.drawer .filters-panel { display: block; }
+.load-more-wrap { text-align: center; margin-top: 40px; }
+
+.cat-hero { background: var(--brand-50); border-bottom: 1px solid var(--ink-150); }
+.cat-hero .wrap { padding-block: 22px 26px; }
+.cat-hero h1 { font-size: clamp(26px,3vw,38px); }
+.cat-hero p { color: var(--ink-600); margin-top: 8px; max-width: 60ch; }
+</style>
+</head>
+<body>
+<div id="site-header"></div>
+
+<div class="wrap">
+  <nav class="crumb">
+    <a href="index.html">Główna</a><span class="sep">/</span>
+    <a href="catalog.html">Katalog</a><span class="sep">/</span>
+    <b id="crumbCat">Wszystkie produkty</b>
+  </nav>
+</div>
+
+<section class="cat-hero">
+  <div class="wrap">
+    <h1 id="catTitle">Wszystkie produkty</h1>
+    <p id="catDesc">Pełny asortyment CarpPoint — od kulek proteinowych i wędek karpiowych po przynęty spinningowe i akcesoria.</p>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="cat-layout">
+    <!-- SIDEBAR -->
+    <aside class="filters">
+      <div class="filters-head">
+        <h3>Filtry</h3>
+        <a href="#" class="clear" id="clearAll">Wyczyść wszystko</a>
+      </div>
+      <div class="filters-panel" id="filtersPanel">
+        <details class="facet" open>
+          <summary>Kategoria <span class="chev"></span></summary>
+          <div class="facet-body" id="fCat"></div>
+        </details>
+        <details class="facet" open>
+          <summary>Cena <span class="chev"></span></summary>
+          <div class="facet-body">
+            <div class="range-wrap">
+              <div class="range-track"><div class="range-fill" id="rangeFill"></div></div>
+              <input type="range" id="rmin" min="0" max="1000" value="0" step="10">
+              <input type="range" id="rmax" min="0" max="1000" value="1000" step="10">
+              <div class="range-inputs">
+                <input class="input" id="pmin" value="0"><span>—</span><input class="input" id="pmax" value="1000"><span style="font-size:13px">zł</span>
+              </div>
+            </div>
+          </div>
+        </details>
+        <details class="facet" open>
+          <summary>Marka <span class="chev"></span></summary>
+          <div class="facet-body">
+            <div class="brand-search"><input class="input" id="brandSearch" placeholder="Szukaj marki…"></div>
+            <div id="fBrand" style="display:flex;flex-direction:column;gap:10px"></div>
+            <button class="show-more" id="brandMore">Pokaż więcej</button>
+          </div>
+        </details>
+        <details class="facet" open>
+          <summary>Dostępność <span class="chev"></span></summary>
+          <div class="facet-body">
+            <label class="toggle"><input type="checkbox" id="onlyAvail"><span class="tr"></span> Tylko dostępne</label>
+          </div>
+        </details>
+        <details class="facet" open>
+          <summary>Ocena <span class="chev"></span></summary>
+          <div class="facet-body" id="fRate">
+            <label class="rate-opt"><input type="radio" name="rate" value="0" checked> Wszystkie</label>
+            <label class="rate-opt"><input type="radio" name="rate" value="4.5"><span class="stars" style="--pct:90%"></span> 4,5+</label>
+            <label class="rate-opt"><input type="radio" name="rate" value="4"><span class="stars" style="--pct:80%"></span> 4,0+</label>
+          </div>
+        </details>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main>
+      <div class="cat-top">
+        <div class="count"><b id="resCount">0</b> produktów</div>
+        <div class="right">
+          <button class="btn btn-outline btn-sm filter-btn" id="openFilters"></button>
+          <select class="select" id="sortSel" aria-label="Sortowanie">
+            <option value="rel">Trafność</option>
+            <option value="price-asc">Cena: rosnąco</option>
+            <option value="price-desc">Cena: malejąco</option>
+            <option value="new">Nowości</option>
+            <option value="rating">Najwyżej oceniane</option>
+          </select>
+        </div>
+      </div>
+      <div class="pills-row" id="pillsRow"></div>
+      <div class="grid-products cols-3" id="catGrid"></div>
+      <div class="load-more-wrap" id="loadMoreWrap">
+        <button class="btn btn-outline btn-lg" id="loadMore">Załaduj więcej produktów</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div id="site-footer"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const state = {
+  cats: new Set(), brands: new Set(), pmin:0, pmax:1000,
+  avail:false, rate:0, sort:'rel', promo: params.has('promo'), onlyNew: params.has('new'), shown:9
+};
+const initCat = params.get('cat');
+if(initCat) state.cats.add(initCat);
+
+const catMeta = {
+  karp:["Karp","Kulki proteinowe, pop-upy, wafters, liquidy, zestawy i wszystko na karpia."],
+  wedki:["Wędki","Wędki karpiowe, spinningowe, feederowe i uniwersalne od sprawdzonych marek."],
+  kolowrotki:["Kołowrotki","Kołowrotki karpiowe z baitrunnerem, spinningowe i feederowe."],
+  przynety:["Przynęty spinningowe","Gumy jadalne, woblery, błystki i przynęty na drapieżnika."],
+  zanety:["Zanęty","Zanęty method, pellet i mieszanki na karpia, leszcza i feeder."],
+  zylki:["Żyłki i plecionki","Plecionki 8x, żyłki monofilowe, fluorocarbon i materiały przyponowe."],
+  haczyki:["Haczyki","Haczyki karpiowe, spinningowe i do białej ryby."],
+  akcesoria:["Akcesoria","Sygnalizatory, podbieraki, łóżka karpiowe i sprzęt biwakowy."],
+};
+const active = initCat || '';
+CP.init(active);
+document.getElementById('openFilters').innerHTML = CP.icon('filter','ico')+' Filtry';
+
+// title/breadcrumb
+function setHead(){
+  if(state.onlyNew){ document.getElementById('catTitle').textContent='Nowości'; document.getElementById('crumbCat').textContent='Nowości'; document.getElementById('catDesc').textContent='Najnowsze produkty w ofercie CarpPoint — świeżo dodane do magazynu.'; return; }
+  if(state.promo){ document.getElementById('catTitle').textContent='Promocje'; document.getElementById('crumbCat').textContent='Promocje'; document.getElementById('catDesc').textContent='Produkty w obniżonych cenach. Oferta ważna do wyczerpania zapasów.'; return; }
+  if(state.cats.size===1){ const c=[...state.cats][0]; const m=catMeta[c]; if(m){ document.getElementById('catTitle').textContent=m[0]; document.getElementById('crumbCat').textContent=m[0]; document.getElementById('catDesc').textContent=m[1]; } }
+}
+setHead();
+
+// build category facet
+document.getElementById('fCat').innerHTML = CP.categories.map(c=>`
+  <label class="check"><span><input type="checkbox" data-cat="${c.slug}" ${state.cats.has(c.slug)?'checked':''}> ${c.name}</span><span class="cnt">${c.count}</span></label>`).join('');
+
+// brand facet
+let brandLimit = 6;
+function renderBrands(){
+  const q = (document.getElementById('brandSearch').value||'').toLowerCase();
+  let list = CP.brands.filter(b=>b.toLowerCase().includes(q));
+  const shown = q? list : list.slice(0, brandLimit);
+  document.getElementById('fBrand').innerHTML = shown.map(b=>{
+    const cnt = CP.products.filter(p=>p.brand===b).length;
+    return `<label class="check"><span><input type="checkbox" data-brand="${CP.esc(b)}" ${state.brands.has(b)?'checked':''}> ${b}</span><span class="cnt">${cnt}</span></label>`;
+  }).join('');
+  document.getElementById('brandMore').style.display = (q||CP.brands.length<=brandLimit)?'none':'';
+}
+renderBrands();
+document.getElementById('brandMore').addEventListener('click', ()=>{ brandLimit=CP.brands.length; renderBrands(); });
+document.getElementById('brandSearch').addEventListener('input', renderBrands);
+
+// price range
+const rmin=document.getElementById('rmin'), rmax=document.getElementById('rmax');
+const pmin=document.getElementById('pmin'), pmax=document.getElementById('pmax');
+function syncRange(){
+  let a=+rmin.value, b=+rmax.value; if(a>b){ [a,b]=[b,a]; }
+  state.pmin=a; state.pmax=b; pmin.value=a; pmax.value=b;
+  document.getElementById('rangeFill').style.left=(a/1000*100)+'%';
+  document.getElementById('rangeFill').style.width=((b-a)/1000*100)+'%';
+}
+[rmin,rmax].forEach(r=>r.addEventListener('input',()=>{ syncRange(); apply(); }));
+[pmin,pmax].forEach(p=>p.addEventListener('change',()=>{ rmin.value=Math.min(+pmin.value,+pmax.value); rmax.value=Math.max(+pmin.value,+pmax.value); syncRange(); apply(); }));
+syncRange();
+
+// filter events
+document.getElementById('filtersPanel').addEventListener('change', e=>{
+  const cat=e.target.getAttribute('data-cat'); if(cat){ e.target.checked?state.cats.add(cat):state.cats.delete(cat); state.shown=9; apply(); return; }
+  const br=e.target.getAttribute('data-brand'); if(br!=null){ e.target.checked?state.brands.add(br):state.brands.delete(br); state.shown=9; apply(); return; }
+  if(e.target.id==='onlyAvail'){ state.avail=e.target.checked; apply(); return; }
+  if(e.target.name==='rate'){ state.rate=+e.target.value; apply(); return; }
+});
+document.getElementById('sortSel').addEventListener('change', e=>{ state.sort=e.target.value; apply(); });
+document.getElementById('clearAll').addEventListener('click', e=>{ e.preventDefault(); state.cats.clear(); state.brands.clear(); state.pmin=0; state.pmax=1000; state.avail=false; state.rate=0; state.promo=false; state.onlyNew=false; rmin.value=0; rmax.value=1000; syncRange(); document.getElementById('onlyAvail').checked=false; document.querySelector('[name=rate][value="0"]').checked=true; document.querySelectorAll('[data-cat],[data-brand]').forEach(i=>i.checked=false); apply(); });
+
+function getList(){
+  let list = CP.products.slice();
+  if(state.promo) list = list.filter(p=>p.was);
+  if(state.onlyNew) list = list.filter(p=>p.isNew);
+  if(state.cats.size) list = list.filter(p=>state.cats.has(p.catSlug));
+  if(state.brands.size) list = list.filter(p=>state.brands.has(p.brand));
+  list = list.filter(p=>p.price>=state.pmin && p.price<=state.pmax);
+  if(state.avail) list = list.filter(p=>p.stock!=='out');
+  if(state.rate) list = list.filter(p=>p.rating>=state.rate);
+  if(state.sort==='price-asc') list.sort((a,b)=>a.price-b.price);
+  else if(state.sort==='price-desc') list.sort((a,b)=>b.price-a.price);
+  else if(state.sort==='new') list.sort((a,b)=>(b.isNew?1:0)-(a.isNew?1:0));
+  else if(state.sort==='rating') list.sort((a,b)=>b.rating-a.rating);
+  return list;
+}
+function renderPills(){
+  const pills=[];
+  state.promo && pills.push(['Promocje','promo']);
+  state.onlyNew && pills.push(['Nowości','new']);
+  state.cats.forEach(c=> pills.push([(CP.categories.find(x=>x.slug===c)||{}).name||c,'cat:'+c]));
+  state.brands.forEach(b=> pills.push([b,'brand:'+b]));
+  if(state.avail) pills.push(['Tylko dostępne','avail']);
+  if(state.rate) pills.push(['Ocena '+state.rate.toString().replace('.',',')+'+','rate']);
+  if(state.pmin>0||state.pmax<1000) pills.push([CP.price(state.pmin)+' – '+CP.price(state.pmax),'price']);
+  const row=document.getElementById('pillsRow');
+  if(!pills.length){ row.innerHTML=''; return; }
+  row.innerHTML = pills.map(([t,k])=>`<span class="pill">${t}<button data-pill="${k}" aria-label="Usuń">${CP.icon('x','ico')}</button></span>`).join('')
+    + `<a href="#" class="clear-all" id="pillClear">Wyczyść filtry</a>`;
+}
+document.getElementById('pillsRow').addEventListener('click', e=>{
+  if(e.target.closest('#pillClear')){ e.preventDefault(); document.getElementById('clearAll').click(); return; }
+  const b=e.target.closest('[data-pill]'); if(!b) return;
+  const k=b.getAttribute('data-pill');
+  if(k==='promo') state.promo=false;
+  else if(k==='new') state.onlyNew=false;
+  else if(k==='avail'){ state.avail=false; document.getElementById('onlyAvail').checked=false; }
+  else if(k==='rate'){ state.rate=0; document.querySelector('[name=rate][value="0"]').checked=true; }
+  else if(k==='price'){ state.pmin=0; state.pmax=1000; rmin.value=0; rmax.value=1000; syncRange(); }
+  else if(k.startsWith('cat:')){ const c=k.slice(4); state.cats.delete(c); const el=document.querySelector('[data-cat="'+c+'"]'); if(el) el.checked=false; }
+  else if(k.startsWith('brand:')){ const br=k.slice(6); state.brands.delete(br); const el=document.querySelector('[data-brand="'+CSS.escape(br)+'"]'); if(el) el.checked=false; }
+  apply();
+});
+
+function apply(){
+  const list=getList();
+  document.getElementById('resCount').textContent=list.length;
+  const slice=list.slice(0,state.shown);
+  CP.renderGrid('#catGrid', slice);
+  if(!list.length){ document.getElementById('catGrid').innerHTML = `<div class="empty-state" style="grid-column:1/-1">${CP.icon('search','ico')}<p style="font-weight:600;color:var(--ink-700)">Brak produktów dla wybranych filtrów</p><p class="small">Spróbuj zmienić kryteria.</p></div>`; }
+  document.getElementById('loadMoreWrap').style.display = list.length>state.shown ? '' : 'none';
+  renderPills();
+}
+document.getElementById('loadMore').addEventListener('click', ()=>{ state.shown+=6; apply(); });
+
+// mobile filters drawer
+document.getElementById('openFilters').addEventListener('click', ()=>{
+  const nd=document.getElementById('navDrawer');
+  const body=nd.querySelector('.drawer-body');
+  nd.querySelector('.drawer-head h3').textContent='Filtry';
+  body.innerHTML='';
+  body.appendChild(document.querySelector('.filters'));
+  nd.classList.add('open'); document.getElementById('scrim').classList.add('open');
+});
+
+apply();
+</script>
+</body>
+</html>

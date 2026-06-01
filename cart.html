@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Koszyk — CarpPoint.pl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,400..700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+.cart-layout { display: grid; grid-template-columns: 1fr 380px; gap: 40px; align-items: start; padding-block: 8px 72px; }
+@media (max-width: 900px){ .cart-layout { grid-template-columns: 1fr; gap: 28px; } }
+.cart-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+.cart-head h1 { font-size: clamp(28px,3vw,38px); }
+.cart-head span { color: var(--ink-500); font-size: 15px; }
+
+.citem { display: grid; grid-template-columns: 96px 1fr auto; gap: 18px; padding: 22px 0; border-bottom: 1px solid var(--ink-150); align-items: start; }
+.citem .ph { width: 96px; height: 96px; border-radius: var(--r-md); }
+.citem .ph::after { font-size: 9px; }
+.citem .nm { font-size: 16px; font-weight: 600; line-height: 1.35; }
+.citem .nm:hover { color: var(--brand-700); }
+.citem .brand { font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--brand-600); margin-bottom: 4px; }
+.citem .vr { font-size: 13.5px; color: var(--ink-500); margin: 4px 0 12px; }
+.citem .controls { display: flex; align-items: center; gap: 16px; }
+.citem .rm { background: none; border: none; color: var(--ink-400); display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.citem .rm:hover { color: var(--bad-600); }
+.citem .rm .ico { width: 16px; height: 16px; }
+.citem .lt { text-align: right; }
+.citem .lt b { font-size: 18px; font-weight: 800; font-family: var(--font-display); color: var(--brand-800); }
+.citem .lt .unit { display: block; font-size: 12.5px; color: var(--ink-400); margin-top: 2px; }
+@media (max-width: 560px){ .citem { grid-template-columns: 72px 1fr; } .citem .lt { grid-column: 2; text-align: left; margin-top: 6px; } .citem .ph { width: 72px; height: 72px; } }
+
+.cart-foot-link { display: inline-flex; align-items: center; gap: 8px; color: var(--brand-700); font-weight: 600; margin-top: 22px; }
+.cart-foot-link:hover { color: var(--accent-600); }
+.cart-foot-link .ico { width: 18px; height: 18px; }
+
+/* summary */
+.summary { position: sticky; top: calc(var(--header-h) + 12px); background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: 24px; box-shadow: var(--sh-card); }
+.summary h3 { font-size: 20px; margin-bottom: 16px; }
+.summary .sumrow { padding: 7px 0; }
+.summary .divider { margin: 12px 0; }
+.summary .total { font-size: 22px; }
+.summary .vat { font-size: 12px; color: var(--ink-500); }
+.summary .free-bar { background: var(--brand-50); border: 1px solid var(--brand-100); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 18px; font-size: 13px; color: var(--brand-800); }
+.summary .free-bar .track { height: 6px; background: var(--brand-100); border-radius: 4px; margin-top: 8px; overflow: hidden; }
+.summary .free-bar .fill { height: 100%; background: var(--brand-600); border-radius: 4px; transition: width .3s; }
+.promo-toggle { font-size: 14px; color: var(--brand-700); font-weight: 600; background: none; border: none; padding: 0; margin: 16px 0 0; display: inline-flex; align-items: center; gap: 6px; }
+.promo-input { display: none; gap: 8px; margin-top: 12px; }
+.promo-input.show { display: flex; }
+.promo-input .input { flex: 1; }
+.promo-applied { display: none; align-items: center; gap: 8px; margin-top: 12px; font-size: 13.5px; }
+.promo-applied.show { display: flex; }
+.trust { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12.5px; color: var(--ink-500); margin-top: 14px; }
+.trust .ico { width: 15px; height: 15px; }
+.crosssell { margin-top: 18px; }
+</style>
+</head>
+<body>
+<div id="site-header"></div>
+
+<div class="wrap">
+  <nav class="crumb"><a href="index.html">Główna</a><span class="sep">/</span><b>Koszyk</b></nav>
+
+  <div class="cart-head">
+    <h1>Koszyk</h1>
+    <span id="cartCountTxt"></span>
+  </div>
+
+  <div class="cart-layout" id="cartLayout">
+    <!-- ITEMS -->
+    <div>
+      <div id="cartItems"></div>
+      <a class="cart-foot-link" href="catalog.html">Kontynuuj zakupy</a>
+    </div>
+
+    <!-- SUMMARY -->
+    <aside class="summary">
+      <h3>Podsumowanie</h3>
+      <div class="free-bar" id="freeBar"></div>
+      <div class="sumrow"><span class="muted" id="prodCount">Produkty</span><b id="sumSub">0,00 zł</b></div>
+      <div class="sumrow"><span class="muted">Dostawa</span><span class="muted">liczona w kasie</span></div>
+      <div class="sumrow" id="discRow" style="display:none"><span style="color:var(--ok-700)" id="discLabel">Rabat</span><b style="color:var(--ok-700)" id="discVal"></b></div>
+      <hr class="divider">
+      <div class="sumrow total"><span>Razem</span><b id="sumTotal">0,00 zł</b></div>
+      <div class="sumrow"><span class="vat">w tym VAT 23%</span><span class="vat" id="sumVat"></span></div>
+
+      <button class="promo-toggle" id="promoToggle">Masz kod rabatowy?</button>
+      <div class="promo-input" id="promoInput">
+        <input class="input" id="promoCode" placeholder="np. SUMMER10">
+        <button class="btn btn-brand" id="promoApply">Zastosuj</button>
+      </div>
+      <div class="promo-applied" id="promoApplied">
+        <span class="pill" style="background:var(--ok-50);border-color:#bfe3cc;color:var(--ok-700)" id="promoPill"></span>
+        <a href="#" id="promoRemove" style="color:var(--ink-500);font-size:13px">Usuń</a>
+      </div>
+
+      <a class="btn btn-primary btn-block btn-lg" href="checkout.html" id="goCheckout" style="margin-top:20px">Przejdź do kasy</a>
+      <div class="trust">Bezpieczne płatności · Przelewy24 · BLIK</div>
+    </aside>
+  </div>
+</div>
+
+<!-- cross-sell -->
+<section class="section tint">
+  <div class="wrap">
+    <div class="section-head"><div><span class="eyebrow">Uzupełnij zestaw</span><h2 class="h2" style="margin-top:8px">Może Cię zainteresować</h2></div></div>
+    <div class="grid-products cols-4" id="csGrid"></div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+CP.init('');
+const FREE = 200;
+let discount = 0, code = '';
+const CODES = { 'SUMMER10':0.10, 'KARP15':0.15 };
+
+document.querySelector('.cart-foot-link').innerHTML = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> Kontynuuj zakupy';
+document.getElementById('promoToggle').innerHTML = CP.icon('tag','ico')+' Masz kod rabatowy?';
+document.getElementById('goCheckout').innerHTML = 'Przejdź do kasy '+CP.icon('arrow','ico');
+document.querySelector('.trust').innerHTML = CP.icon('lock','ico')+' Bezpieczne płatności · Przelewy24 · BLIK';
+
+CP.onCartChange = render;
+
+function render(){
+  const c = CP.getCart();
+  const layout = document.getElementById('cartLayout');
+  document.getElementById('cartCountTxt').textContent = c.length? '· '+CP.cartCount()+' szt.' : '';
+  if(!c.length){
+    layout.innerHTML = `<div class="empty-state" style="grid-column:1/-1;padding:70px 20px">${CP.icon('cart','ico')}<p style="font-weight:700;color:var(--ink-800);font-size:18px;margin-bottom:6px">Twój koszyk jest pusty</p><p class="small" style="margin-bottom:20px">Dodaj produkty, aby przejść do kasy.</p><a class="btn btn-primary btn-lg" href="catalog.html">Przeglądaj katalog</a></div>`;
+    return;
+  }
+  document.getElementById('cartItems').innerHTML = c.map(i=>`
+    <div class="citem">
+      <div class="ph" data-label="${CP.esc(i.label)}"></div>
+      <div>
+        <div class="brand">${CP.esc(i.brand||'')}</div>
+        <a class="nm" href="product.html?id=${i.id}">${CP.esc(i.name)}</a>
+        ${i.variant?`<div class="vr">Wariant: ${CP.esc(i.variant)}</div>`:'<div class="vr"></div>'}
+        <div class="controls">
+          <div class="stepper sm"><button data-dec="${i.key}">−</button><input value="${i.qty}" readonly><button data-inc="${i.key}">+</button></div>
+          <button class="rm" data-rm="${i.key}">${CP.icon('trash','ico')} Usuń</button>
+        </div>
+      </div>
+      <div class="lt"><b>${CP.price(i.price*i.qty)}</b><span class="unit">${CP.price(i.price)} / szt.</span></div>
+    </div>`).join('');
+
+  const sub = CP.cartSubtotal();
+  document.getElementById('prodCount').textContent = 'Produkty ('+CP.cartCount()+' szt.)';
+  document.getElementById('sumSub').textContent = CP.price(sub);
+  const disc = discount? sub*discount : 0;
+  const total = sub - disc;
+  document.getElementById('discRow').style.display = disc? '' : 'none';
+  if(disc){ document.getElementById('discLabel').textContent='Rabat ('+code+')'; document.getElementById('discVal').textContent='−'+CP.price(disc); }
+  document.getElementById('sumTotal').textContent = CP.price(total);
+  document.getElementById('sumVat').textContent = CP.price(total - total/1.23);
+
+  const fb = document.getElementById('freeBar');
+  if(sub>=FREE){ fb.innerHTML = CP.icon('check','ico').replace('class="ico"','')+' <b>Masz darmową dostawę!</b>'; fb.style.display=''; }
+  else { const left=FREE-sub; fb.innerHTML = `Do <b>darmowej dostawy</b> brakuje ${CP.price(left)}<div class="track"><div class="fill" style="width:${Math.min(100,sub/FREE*100)}%"></div></div>`; fb.style.display=''; }
+}
+
+// promo
+document.getElementById('promoToggle').addEventListener('click', ()=> document.getElementById('promoInput').classList.toggle('show'));
+document.getElementById('promoApply').addEventListener('click', ()=>{
+  const v = (document.getElementById('promoCode').value||'').trim().toUpperCase();
+  if(CODES[v]){ discount=CODES[v]; code=v; document.getElementById('promoInput').classList.remove('show'); const pa=document.getElementById('promoApplied'); pa.classList.add('show'); document.getElementById('promoPill').innerHTML=CP.icon('check','ico')+' '+v+' (−'+(discount*100)+'%)'; CP.toast('Kod rabatowy zastosowany','ok'); render(); }
+  else CP.toast('Nieprawidłowy kod rabatowy');
+});
+document.getElementById('promoRemove').addEventListener('click', e=>{ e.preventDefault(); discount=0; code=''; document.getElementById('promoApplied').classList.remove('show'); render(); });
+
+render();
+CP.renderGrid('#csGrid', CP.products.filter(p=>p.tags.includes('Atraktory')||p.isNew).slice(0,4));
+</script>
+</body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kasa — CarpPoint.pl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,400..700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+.co-layout { display: grid; grid-template-columns: 1fr 380px; gap: 40px; align-items: start; padding-block: 8px 72px; }
+@media (max-width: 900px){ .co-layout { grid-template-columns: 1fr; gap: 28px; } .co-summary { order: -1; } }
+
+/* progress */
+.steps { display: flex; align-items: center; margin: 8px 0 34px; }
+.step { display: flex; align-items: center; gap: 10px; }
+.step .dot { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--ink-300); color: var(--ink-400); display: grid; place-items: center; font-weight: 700; font-size: 14px; flex: none; background: #fff; transition: .2s; }
+.step .lbl { font-size: 14px; font-weight: 600; color: var(--ink-400); }
+.step.active .dot { border-color: var(--brand-700); background: var(--brand-700); color: #fff; }
+.step.active .lbl { color: var(--brand-900); }
+.step.done .dot { border-color: var(--brand-700); background: var(--brand-50); color: var(--brand-700); }
+.step.done .lbl { color: var(--ink-700); }
+.step .bar { width: 100%; height: 2px; background: var(--ink-200); margin: 0 14px; min-width: 24px; }
+.step.done .bar { background: var(--brand-600); }
+.steps .seg { flex: 1; height: 2px; background: var(--ink-200); margin: 0 12px; }
+.steps .seg.done { background: var(--brand-600); }
+@media (max-width: 640px){ .step .lbl { display: none; } }
+
+.co-card { background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: 26px; margin-bottom: 20px; }
+.co-card h3 { font-size: 19px; margin-bottom: 18px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid .full { grid-column: 1 / -1; }
+@media (max-width: 520px){ .form-grid { grid-template-columns: 1fr; } }
+
+.step-pane { display: none; }
+.step-pane.active { display: block; }
+
+/* delivery / payment option cards */
+.opt-card { display: flex; align-items: center; gap: 14px; border: 1.5px solid var(--ink-200); border-radius: var(--r-md); padding: 16px; cursor: pointer; transition: .15s; margin-bottom: 12px; }
+.opt-card:hover { border-color: var(--brand-500); }
+.opt-card.sel { border-color: var(--brand-700); background: var(--brand-50); }
+.opt-card .radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--ink-300); flex: none; position: relative; }
+.opt-card.sel .radio { border-color: var(--brand-700); }
+.opt-card.sel .radio::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--brand-700); }
+.opt-ic { width: 44px; height: 44px; border-radius: var(--r-md); background: var(--ink-100); display: grid; place-items: center; color: var(--brand-800); flex: none; }
+.opt-ic .ico { width: 22px; height: 22px; }
+.opt-ic.logo { font-family: var(--font-display); font-weight: 800; font-size: 12px; letter-spacing: -.02em; color: var(--brand-800); }
+.opt-main { flex: 1; }
+.opt-main b { font-size: 15px; display: block; }
+.opt-main span { font-size: 13px; color: var(--ink-500); }
+.opt-price { font-weight: 700; color: var(--brand-800); white-space: nowrap; }
+.opt-price.free { color: var(--ok-700); }
+
+.co-nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 4px; }
+.link-back { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-600); font-weight: 600; background: none; border: none; }
+.link-back:hover { color: var(--brand-700); }
+.link-back .ico { width: 18px; height: 18px; }
+
+/* summary */
+.co-summary { position: sticky; top: calc(var(--header-h) + 12px); background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: 24px; }
+.co-summary h3 { font-size: 18px; margin-bottom: 14px; }
+.mini-line { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--ink-150); align-items: center; }
+.mini-line .ph { width: 48px; height: 48px; border-radius: var(--r-sm); flex: none; }
+.mini-line .ph::after { font-size: 7px; padding: 1px 3px; }
+.mini-line .mn { font-size: 13px; font-weight: 600; line-height: 1.3; }
+.mini-line .mq { font-size: 12px; color: var(--ink-500); }
+.mini-line .mp { font-weight: 700; font-size: 13.5px; color: var(--brand-800); white-space: nowrap; }
+.co-summary .sumrow { padding: 6px 0; font-size: 14px; }
+.co-summary .total { font-size: 20px; padding-top: 8px; }
+
+/* confirmation */
+.confirm { text-align: center; padding: 50px 20px; max-width: 560px; margin: 0 auto; }
+.confirm .check-circle { width: 86px; height: 86px; border-radius: 50%; background: var(--brand-50); border: 2px solid var(--brand-200); display: grid; place-items: center; color: var(--brand-700); margin: 0 auto 24px; }
+.confirm .check-circle .ico { width: 44px; height: 44px; }
+.confirm h1 { font-size: clamp(28px,3.4vw,40px); margin-bottom: 12px; }
+.confirm .ordernum { font-family: var(--font-mono); font-size: 15px; background: var(--ink-100); padding: 8px 16px; border-radius: var(--r-pill); display: inline-block; margin: 8px 0 18px; color: var(--ink-800); }
+.confirm .lead { margin-bottom: 28px; }
+.confirm .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.recap { text-align: left; border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: 22px; margin-top: 34px; }
+.recap h4 { font-family: var(--font-display); font-size: 16px; margin-bottom: 14px; }
+
+/* locker picker */
+.locker-row { margin-top: 12px; }
+.locker-sel { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--brand-200); border-radius: var(--r-md); padding: 10px 12px; }
+.locker-sel .ico { width: 20px; height: 20px; color: var(--brand-700); flex: none; }
+.locker-sel b { font-size: 13.5px; display: block; }
+.locker-sel span { font-size: 12.5px; color: var(--ink-500); }
+.locker-change { margin-left: auto; background: none; border: none; color: var(--brand-700); font-weight: 700; font-size: 13px; cursor: pointer; }
+.locker-row .btn .ico { width: 16px; height: 16px; }
+
+/* modal */
+.modal-scrim { position: fixed; inset: 0; background: rgba(17,38,28,.55); z-index: 120; display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-scrim.open { display: flex; }
+.modal { background: #fff; border-radius: var(--r-xl); width: min(860px, 100%); max-height: 88vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--sh-pop); }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--ink-200); }
+.modal-head h3 { font-size: 19px; }
+.modal-head .icon-btn .ico { width: 20px; height: 20px; }
+.modal-body { display: grid; grid-template-columns: 1fr 1fr; min-height: 0; flex: 1; }
+@media (max-width: 680px){ .modal-body { grid-template-columns: 1fr; } .modal-map { display: none; } }
+.modal-map { position: relative; min-height: 360px; }
+.modal-map .ph { position: absolute; inset: 0; }
+.locker-list-wrap { display: flex; flex-direction: column; min-height: 0; }
+.locker-search { padding: 16px; border-bottom: 1px solid var(--ink-150); }
+.locker-list { overflow-y: auto; padding: 8px; max-height: 420px; }
+.locker-item { display: flex; gap: 12px; align-items: flex-start; padding: 13px; border-radius: var(--r-md); cursor: pointer; border: 1.5px solid transparent; }
+.locker-item:hover { background: var(--brand-50); }
+.locker-item.sel { border-color: var(--brand-700); background: var(--brand-50); }
+.locker-item .lic { width: 38px; height: 38px; border-radius: 10px; background: var(--brand-50); color: var(--brand-700); display: grid; place-items: center; flex: none; }
+.locker-item .lic .ico { width: 19px; height: 19px; }
+.locker-item .lcode { font-family: var(--font-mono); font-weight: 700; font-size: 13.5px; color: var(--ink-900); }
+.locker-item .laddr { font-size: 13px; color: var(--ink-600); }
+.locker-item .ldist { font-size: 12px; color: var(--ink-400); margin-top: 2px; }
+.modal-foot { padding: 14px 22px; border-top: 1px solid var(--ink-200); display: flex; justify-content: flex-end; gap: 10px; }
+</style>
+</head>
+<body>
+<div id="site-header"></div>
+
+<div class="wrap">
+  <nav class="crumb"><a href="index.html">Główna</a><span class="sep">/</span><a href="cart.html">Koszyk</a><span class="sep">/</span><b>Kasa</b></nav>
+
+  <!-- CHECKOUT FLOW -->
+  <div id="flow">
+    <div class="steps" id="stepsBar"></div>
+    <div class="co-layout">
+      <div>
+        <!-- STEP 1 -->
+        <div class="step-pane active" data-step="0">
+          <div class="co-card">
+            <h3>Dane kontaktowe</h3>
+            <div class="form-grid">
+              <div class="field"><label>Imię</label><input class="input" value="Jan"></div>
+              <div class="field"><label>Nazwisko</label><input class="input" value="Kowalski"></div>
+              <div class="field full"><label>E-mail</label><input class="input" type="email" value="jan.kowalski@example.com"></div>
+              <div class="field full"><label>Telefon</label><input class="input" type="tel" value="+48 600 123 456"></div>
+              <label class="check full" style="margin-top:4px"><input type="checkbox" id="vatChk"> Chcę otrzymać fakturę VAT</label>
+              <div class="field full" id="nipField" style="display:none"><label>NIP</label><input class="input" placeholder="000-000-00-00"></div>
+            </div>
+          </div>
+          <div class="co-nav">
+            <a class="link-back" href="cart.html"></a>
+            <button class="btn btn-primary btn-lg" data-next>Dalej: dostawa</button>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step-pane" data-step="1">
+          <div class="co-card">
+            <h3>Adres dostawy</h3>
+            <div class="form-grid">
+              <div class="field full"><label>Ulica i numer</label><input class="input" value="ul. Wędkarska 12"></div>
+              <div class="field full"><label>Mieszkanie / lokal (opcjonalnie)</label><input class="input" placeholder="np. 4"></div>
+              <div class="field"><label>Kod pocztowy</label><input class="input" value="00-123"></div>
+              <div class="field"><label>Miejscowość</label><input class="input" value="Warszawa"></div>
+              <div class="field full"><label>Kraj</label><select class="select"><option>Polska</option><option>Niemcy</option><option>Czechy</option></select></div>
+            </div>
+          </div>
+          <div class="co-card">
+            <h3>Metoda dostawy</h3>
+            <div id="shipOpts"></div>
+          </div>
+          <div class="co-nav">
+            <button class="link-back" data-prev></button>
+            <button class="btn btn-primary btn-lg" data-next>Dalej: płatność</button>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step-pane" data-step="2">
+          <div class="co-card">
+            <h3>Płatność</h3>
+            <div id="payOpts"></div>
+          </div>
+          <div class="co-card">
+            <label class="check"><input type="checkbox" checked> Akceptuję <a href="#" style="color:var(--brand-700);font-weight:600;margin:0 4px">regulamin</a> i politykę prywatności</label>
+          </div>
+          <div class="co-nav">
+            <button class="link-back" data-prev></button>
+            <button class="btn btn-primary btn-lg" id="placeOrder">Zamawiam i płacę</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUMMARY -->
+      <aside class="co-summary">
+        <h3>Twoje zamówienie</h3>
+        <div id="miniItems"></div>
+        <div style="margin-top:14px">
+          <div class="sumrow"><span class="muted" id="coSubLabel">Produkty</span><b id="coSub"></b></div>
+          <div class="sumrow"><span class="muted">Dostawa</span><b id="coShip">—</b></div>
+          <hr class="divider" style="margin:10px 0">
+          <div class="sumrow total"><span>Razem</span><b id="coTotal"></b></div>
+          <div class="sumrow"><span class="vat" style="font-size:12px;color:var(--ink-500)">w tym VAT 23%</span><span class="vat" style="font-size:12px;color:var(--ink-500)" id="coVat"></span></div>
+        </div>
+        <div class="trust" style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:12.5px;color:var(--ink-500);margin-top:16px" id="coTrust"></div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- CONFIRMATION -->
+  <div id="confirm" style="display:none">
+    <div class="confirm">
+      <div class="check-circle" id="confCheck"></div>
+      <h1>Dziękujemy za zamówienie!</h1>
+      <div class="ordernum" id="orderNum"></div>
+      <p class="lead">Potwierdzenie wysłaliśmy na <b><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bcd6ddd292d7d3cbddd0cfd7d5fcd9c4ddd1ccd0d992dfd3d1">[email&#160;protected]</a></b>. Zajmiemy się Twoją paczką w ciągu 24 godzin.</p>
+      <div class="actions">
+        <a class="btn btn-brand btn-lg" href="#">Śledź zamówienie</a>
+        <a class="btn btn-outline btn-lg" href="index.html">Kontynuuj zakupy</a>
+      </div>
+      <div class="recap">
+        <h4>Podsumowanie zamówienia</h4>
+        <div id="recapItems"></div>
+        <div class="sumrow total" style="font-size:18px;padding-top:12px"><span>Razem</span><b id="recapTotal"></b></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="site-footer"></div>
+
+<!-- PACZKOMAT PICKER MODAL -->
+<div class="modal-scrim" id="lockerModal">
+  <div class="modal" role="dialog" aria-label="Wybierz paczkomat">
+    <div class="modal-head">
+      <h3>Wybierz paczkomat InPost</h3>
+      <button class="icon-btn" data-close-locker aria-label="Zamknij"></button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-map"><div class="ph" data-label="mapa paczkomatów InPost"></div></div>
+      <div class="locker-list-wrap">
+        <div class="locker-search"><div class="search-bar"><span></span><input id="lockerSearch" placeholder="Szukaj po adresie lub kodzie…"></div></div>
+        <div class="locker-list" id="lockerList"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close-locker>Anuluj</button>
+      <button class="btn btn-primary" id="lockerConfirm" disabled>Potwierdź wybór</button>
+    </div>
+  </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+CP.init('');
+let step = 0;
+const STEPS = ['Dane','Dostawa','Płatność','Potwierdzenie'];
+const SHIP = [
+  { id:'inpost', ic:'box', name:'InPost Paczkomat', desc:'Odbiór 24/7, wybierz paczkomat', price:9.99 },
+  { id:'dpd', ic:'truck', name:'Kurier DPD', desc:'Dostawa jutro do 18:00', price:14.99 },
+  { id:'dhl', ic:'truck', name:'Kurier DHL', desc:'1–2 dni robocze', price:19.99 },
+  { id:'poczta', ic:'pin', name:'Poczta Polska', desc:'2–3 dni robocze', price:11.99 },
+];
+const PAY = [
+  { id:'p24', logo:'P24', name:'Przelewy24', desc:'Szybki przelew, BLIK, karty' },
+  { id:'card', ic:'lock', name:'Karta płatnicza', desc:'Visa, Mastercard' },
+  { id:'blik', logo:'BLIK', name:'BLIK', desc:'Płatność kodem z aplikacji banku' },
+];
+let ship = SHIP[0], pay = PAY[0];
+let selectedLocker = null, tempLocker = null;
+const LOCKERS = [
+  { code:'WAR042', addr:'Stacja Orlen, ul. Wędkarska 5', dist:'320 m' },
+  { code:'WAR108', addr:'Biedronka, ul. Spinningowa 22', dist:'650 m' },
+  { code:'WAR256', addr:'Żabka, al. Karpiowa 14', dist:'900 m' },
+  { code:'WAR077', addr:'Lidl, ul. Połowowa 3', dist:'1,2 km' },
+  { code:'WAR319', addr:'Galeria Mokotów, ul. Wołoska 12', dist:'1,8 km' },
+  { code:'WAR412', addr:'Kaufland, ul. Zanętowa 9', dist:'2,4 km' },
+];
+
+// back link icons
+document.querySelectorAll('.link-back[href]')[0].innerHTML = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> Wróć do koszyka';
+document.querySelectorAll('[data-prev]').forEach(b=> b.innerHTML='<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> Wstecz');
+document.getElementById('confCheck').innerHTML = CP.icon('check');
+document.getElementById('coTrust').innerHTML = CP.icon('lock','ico')+' Płatność szyfrowana SSL';
+
+// guard empty cart
+if(!CP.getCart().length){ location.replace('cart.html'); }
+
+function renderSteps(){
+  const bar = document.getElementById('stepsBar');
+  bar.innerHTML = STEPS.map((s,i)=>{
+    const cls = i<step?'done':(i===step?'active':'');
+    const inner = `<div class="step ${cls}"><div class="dot">${i<step?CP.icon('check','ico'):(i+1)}</div><div class="lbl">${s}</div></div>`;
+    return inner + (i<STEPS.length-1?`<div class="seg ${i<step?'done':''}"></div>`:'');
+  }).join('');
+}
+function show(){
+  document.querySelectorAll('.step-pane').forEach(p=>p.classList.toggle('active', +p.dataset.step===step));
+  renderSteps(); window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('[data-next]').forEach(b=> b.addEventListener('click', ()=>{
+  if(step===1 && ship.id==='inpost' && !selectedLocker){ CP.toast('Wybierz paczkomat, aby kontynuować'); openLocker(); return; }
+  step=Math.min(2,step+1); show();
+}));
+document.querySelectorAll('[data-prev]').forEach(b=> b.addEventListener('click', ()=>{ step=Math.max(0,step-1); show(); }));
+document.getElementById('vatChk').addEventListener('change', e=>{ document.getElementById('nipField').style.display=e.target.checked?'':'none'; });
+
+// ship options
+function renderShip(){
+  const sub = CP.cartSubtotal();
+  document.getElementById('shipOpts').innerHTML = SHIP.map(s=>{
+    const free = sub>=200;
+    const price = free? 'Gratis' : CP.price(s.price);
+    let picker = '';
+    if(s.id==='inpost' && ship.id==='inpost'){
+      picker = selectedLocker
+        ? `<div class="locker-row"><div class="locker-sel">${CP.icon('pin','ico')}<div><b>Paczkomat ${selectedLocker.code}</b><span>${selectedLocker.addr}</span></div><button type="button" class="locker-change" data-open-locker>Zmień</button></div></div>`
+        : `<div class="locker-row"><button type="button" class="btn btn-outline btn-sm" data-open-locker>${CP.icon('pin','ico')} Wybierz paczkomat</button></div>`;
+    }
+    return `<div class="opt-card ${s.id===ship.id?'sel':''}" data-ship="${s.id}">
+      <div class="radio"></div>
+      <div class="opt-ic">${CP.icon(s.ic)}</div>
+      <div class="opt-main"><b>${s.name}</b><span>${s.desc}</span>${picker}</div>
+      <div class="opt-price ${free?'free':''}">${price}</div>
+    </div>`;
+  }).join('');
+}
+document.getElementById('shipOpts').addEventListener('click', e=>{
+  if(e.target.closest('[data-open-locker]')){ e.stopPropagation(); openLocker(); return; }
+  const c=e.target.closest('[data-ship]'); if(!c)return; ship=SHIP.find(s=>s.id===c.dataset.ship); renderShip(); summary();
+});
+
+// ---- paczkomat modal ----
+const lockerModal = document.getElementById('lockerModal');
+lockerModal.querySelectorAll('[data-close-locker]').forEach(b=> b.addEventListener('click', closeLocker));
+lockerModal.addEventListener('click', e=>{ if(e.target===lockerModal) closeLocker(); });
+lockerModal.querySelector('.icon-btn[data-close-locker]').innerHTML = CP.icon('x','ico');
+lockerModal.querySelector('.locker-search .search-bar span').innerHTML = CP.icon('search','ico');
+function renderLockers(q){
+  q=(q||'').toLowerCase();
+  const list = LOCKERS.filter(l=> l.code.toLowerCase().includes(q) || l.addr.toLowerCase().includes(q));
+  document.getElementById('lockerList').innerHTML = list.length? list.map(l=>`
+    <div class="locker-item ${tempLocker&&tempLocker.code===l.code?'sel':''}" data-lock="${l.code}">
+      <div class="lic">${CP.icon('box','ico')}</div>
+      <div><div class="lcode">Paczkomat ${l.code}</div><div class="laddr">${l.addr}</div><div class="ldist">${CP.icon('pin','ico').replace('class="ico"','')} ${l.dist} od adresu</div></div>
+    </div>`).join('') : `<div class="empty-state" style="padding:30px">${CP.icon('search','ico')}<p class="small">Brak paczkomatów dla „${q}"</p></div>`;
+}
+function openLocker(){ tempLocker = selectedLocker; renderLockers(''); document.getElementById('lockerSearch').value=''; document.getElementById('lockerConfirm').disabled = !tempLocker; lockerModal.classList.add('open'); }
+function closeLocker(){ lockerModal.classList.remove('open'); }
+document.getElementById('lockerSearch').addEventListener('input', e=> renderLockers(e.target.value));
+document.getElementById('lockerList').addEventListener('click', e=>{ const it=e.target.closest('[data-lock]'); if(!it)return; tempLocker=LOCKERS.find(l=>l.code===it.dataset.lock); renderLockers(document.getElementById('lockerSearch').value); document.getElementById('lockerConfirm').disabled=false; });
+document.getElementById('lockerConfirm').addEventListener('click', ()=>{ selectedLocker=tempLocker; closeLocker(); renderShip(); CP.toast('Wybrano paczkomat '+selectedLocker.code,'ok'); });
+
+// pay options
+function renderPay(){
+  document.getElementById('payOpts').innerHTML = PAY.map(p=>`
+    <div class="opt-card ${p.id===pay.id?'sel':''}" data-pay="${p.id}">
+      <div class="radio"></div>
+      <div class="opt-ic ${p.logo?'logo':''}">${p.logo?p.logo:CP.icon(p.ic)}</div>
+      <div class="opt-main"><b>${p.name}</b><span>${p.desc}</span></div>
+    </div>`).join('');
+}
+document.getElementById('payOpts').addEventListener('click', e=>{ const c=e.target.closest('[data-pay]'); if(!c)return; pay=PAY.find(p=>p.id===c.dataset.pay); renderPay(); });
+
+// summary
+function summary(){
+  const c = CP.getCart(); const sub = CP.cartSubtotal();
+  document.getElementById('miniItems').innerHTML = c.map(i=>`
+    <div class="mini-line">
+      <div class="ph" data-label="${CP.esc(i.label)}"></div>
+      <div style="flex:1"><div class="mn">${CP.esc(i.name)}</div><div class="mq">${i.qty} × ${CP.price(i.price)}${i.variant?' · '+CP.esc(i.variant):''}</div></div>
+      <div class="mp">${CP.price(i.price*i.qty)}</div>
+    </div>`).join('');
+  document.getElementById('coSubLabel').textContent='Produkty ('+CP.cartCount()+' szt.)';
+  document.getElementById('coSub').textContent = CP.price(sub);
+  const free = sub>=200; const shipCost = free?0:ship.price;
+  document.getElementById('coShip').textContent = free? 'Gratis' : CP.price(shipCost);
+  const total = sub + shipCost;
+  document.getElementById('coTotal').textContent = CP.price(total);
+  document.getElementById('coVat').textContent = CP.price(total - total/1.23);
+  return total;
+}
+
+// place order
+document.getElementById('placeOrder').addEventListener('click', ()=>{
+  const c = CP.getCart(); const total = summary();
+  const num = 'ORD-'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'-'+String(Math.floor(Math.random()*900000)+100000);
+  document.getElementById('orderNum').textContent = '#'+num;
+  document.getElementById('recapItems').innerHTML = c.map(i=>`<div class="mini-line"><div class="ph" data-label="${CP.esc(i.label)}"></div><div style="flex:1"><div class="mn">${CP.esc(i.name)}</div><div class="mq">${i.qty} szt.${i.variant?' · '+CP.esc(i.variant):''}</div></div><div class="mp">${CP.price(i.price*i.qty)}</div></div>`).join('');
+  document.getElementById('recapTotal').textContent = CP.price(total);
+  step=3; renderSteps();
+  document.getElementById('flow').style.display='none';
+  document.getElementById('confirm').style.display='';
+  localStorage.removeItem('cp_cart_v1'); CP.updateCount();
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+
+renderShip(); renderPay(); summary(); show();
+</script>
+</body>
+</html>

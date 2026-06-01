@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kontakt — CarpPoint.pl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,400..700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+.k-hero { background: var(--brand-50); border-bottom: 1px solid var(--ink-150); }
+.k-hero .wrap { padding-block: 30px 36px; }
+.k-hero h1 { font-size: clamp(30px,4vw,46px); }
+.k-hero p { color: var(--ink-600); margin-top: 10px; max-width: 54ch; font-size: 17px; }
+
+.k-layout { display: grid; grid-template-columns: 1fr 380px; gap: 44px; align-items: start; padding-block: 8px 72px; }
+@media (max-width: 880px){ .k-layout { grid-template-columns: 1fr; gap: 32px; } }
+
+.k-card { background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: 28px; }
+.k-card h2 { font-size: 22px; margin-bottom: 6px; }
+.k-card .sub { color: var(--ink-500); font-size: 14.5px; margin-bottom: 22px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid .full { grid-column: 1/-1; }
+@media (max-width: 520px){ .form-grid { grid-template-columns: 1fr; } }
+textarea.input { resize: vertical; min-height: 130px; }
+
+.info-list { display: grid; gap: 14px; }
+.info-item { display: flex; gap: 14px; align-items: flex-start; background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: 18px 20px; }
+.info-item .ic { width: 44px; height: 44px; border-radius: 12px; background: var(--brand-50); color: var(--brand-700); display: grid; place-items: center; flex: none; }
+.info-item .ic svg { width: 22px; height: 22px; }
+.info-item .lbl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-400); }
+.info-item b { display: block; font-size: 16px; color: var(--ink-900); margin-top: 3px; }
+.info-item span.small { color: var(--ink-500); }
+
+.k-map { position: relative; height: 220px; border-radius: var(--r-lg); overflow: hidden; margin-top: 14px; border: 1px solid var(--ink-200); }
+.k-map .ph { position: absolute; inset: 0; }
+
+.faq { margin-top: 8px; }
+.faq details { border-bottom: 1px solid var(--ink-200); }
+.faq summary { list-style: none; cursor: pointer; padding: 18px 2px; font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--brand-900); display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary .chev { color: var(--ink-400); transition: transform .2s; flex: none; }
+.faq details[open] summary .chev { transform: rotate(180deg); }
+.faq .a { padding: 0 2px 20px; color: var(--ink-600); line-height: 1.65; }
+</style>
+</head>
+<body>
+<div id="site-header"></div>
+
+<section class="k-hero">
+  <div class="wrap">
+    <nav class="crumb" style="padding-top:0"><a href="index.html">Główna</a><span class="sep">/</span><b>Kontakt</b></nav>
+    <h1>Skontaktuj się z nami</h1>
+    <p>Masz pytanie o sprzęt albo zamówienie? Nasz zespół to czynni wędkarze — chętnie doradzimy i pomożemy dobrać zestaw.</p>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="k-layout">
+    <!-- FORM -->
+    <div class="k-card">
+      <h2>Napisz do nas</h2>
+      <p class="sub">Odpowiadamy w ciągu 24 godzin w dni robocze.</p>
+      <form onsubmit="CP.toast('Wiadomość wysłana — odezwiemy się wkrótce','ok');this.reset();return false">
+        <div class="form-grid">
+          <div class="field"><label>Imię i nazwisko</label><input class="input" required placeholder="Jan Kowalski"></div>
+          <div class="field"><label>E-mail</label><input class="input" type="email" required placeholder="jan@example.com"></div>
+          <div class="field full"><label>Temat</label>
+            <select class="select"><option>Pytanie o produkt</option><option>Status zamówienia</option><option>Zwrot lub reklamacja</option><option>Współpraca</option><option>Inne</option></select>
+          </div>
+          <div class="field full"><label>Wiadomość</label><textarea class="input" required placeholder="W czym możemy pomóc?"></textarea></div>
+          <label class="check full"><input type="checkbox" required> Zgadzam się na przetwarzanie danych zgodnie z polityką prywatności (RODO)</label>
+          <div class="full"><button class="btn btn-primary btn-lg" type="submit" id="sendBtn">Wyślij wiadomość</button></div>
+        </div>
+      </form>
+
+      <h2 style="margin:36px 0 14px">Częste pytania</h2>
+      <div class="faq" id="faq"></div>
+    </div>
+
+    <!-- INFO -->
+    <aside>
+      <div class="info-list" id="infoList"></div>
+      <div class="k-map"><div class="ph" data-label="mapa: ul. Wędkarska 12, Warszawa"></div></div>
+    </aside>
+  </div>
+</div>
+
+<div id="site-footer"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+CP.init('kontakt');
+
+document.getElementById('infoList').innerHTML = [
+  ['pin','Adres','CarpPoint Sp. z o.o.','ul. Wędkarska 12, 00-123 Warszawa'],
+  ['user','Telefon','+48 22 123 45 67','pon–pt 9:00–17:00'],
+  ['box','E-mail','sklep@carppoint.pl','Odpowiedź w 24h'],
+  ['clock','Godziny pracy','pon–pt 9:00–17:00','sob 10:00–14:00'],
+].map(([i,l,b,s])=>`<div class="info-item"><span class="ic">${CP.icon(i)}</span><div><span class="lbl">${l}</span><b>${b}</b><span class="small">${s}</span></div></div>`).join('');
+
+const FAQ = [
+  ['Jak długo trwa dostawa?','Zamówienia złożone do 14:00 wysyłamy tego samego dnia. Paczkomat InPost zwykle dociera następnego dnia roboczego, kurier DPD w 1–2 dni.'],
+  ['Czy mogę zwrócić produkt?','Tak. Masz 30 dni na zwrot bez podawania przyczyny. Produkt musi być nieużywany i w oryginalnym opakowaniu.'],
+  ['Jakie są metody płatności?','Przelewy24, BLIK, karty Visa i Mastercard oraz szybkie przelewy bankowe. Wszystkie płatności są szyfrowane.'],
+  ['Czy wystawiacie faktury VAT?','Oczywiście. Zaznacz opcję faktury VAT w koszyku i podaj NIP — fakturę wyślemy na e-mail.'],
+].map(([q,a])=>`<details><summary>${q}<span class="chev">${CP.icon('chevron','ico')}</span></summary><div class="a">${a}</div></details>`).join('');
+document.getElementById('faq').innerHTML = FAQ;
+</script>
+</body>
+</html>

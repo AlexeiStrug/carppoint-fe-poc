@@ -523,7 +523,11 @@
     const h=document.getElementById('site-header'); if(h) h.innerHTML = CP.header(active);
     const f=document.getElementById('site-footer'); if(f) f.innerHTML = CP.footer();
     CP.mountChrome(active);
-    CP.mountTweakPanel();
+    // shared live theme playground (replaces the old tweak panel)
+    if(!document.getElementById('cpThemeScript')){
+      const s=document.createElement('script'); s.id='cpThemeScript'; s.src='theme-panel.js';
+      document.body.appendChild(s);
+    }
   };
 
   /* expose */

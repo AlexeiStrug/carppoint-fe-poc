@@ -171,6 +171,11 @@
     const sb=document.querySelector('.sidebar'); if(sb) sb.innerHTML = AD.sidebar(active);
     const tb=document.querySelector('.topbar'); if(tb) tb.innerHTML = AD.topbar(title);
     if(!document.getElementById('navScrim')){ const s=document.createElement('div'); s.id='navScrim'; s.className='scrim'; document.body.appendChild(s); }
+    // shared live theme playground
+    if(!document.getElementById('adThemeScript')){
+      const s=document.createElement('script'); s.id='adThemeScript'; s.src='../theme-panel.js';
+      document.body.appendChild(s);
+    }
   };
 
   /* ---- simple bar chart ---- */

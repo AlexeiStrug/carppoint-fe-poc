@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ustawienia — CarpPoint Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+<style>
+.set-layout { display:grid; grid-template-columns:200px 1fr; gap:24px; align-items:start; }
+@media (max-width:760px){ .set-layout { grid-template-columns:1fr; } }
+.set-nav { position:sticky; top:calc(var(--topbar-h) + 16px); display:flex; flex-direction:column; gap:2px; }
+.set-nav button { text-align:left; border:none; background:none; padding:10px 12px; border-radius:var(--r-md); font-size:13.5px; font-weight:600; color:var(--ink-600); }
+.set-nav button.active { background:var(--brand-50); color:var(--brand-800); }
+@media (max-width:760px){ .set-nav { flex-direction:row; flex-wrap:wrap; position:static; } }
+.set-pane { display:none; } .set-pane.active { display:block; }
+.max640 { max-width:640px; }
+.zone-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--ink-150); }
+.zone-row .nm { font-weight:600; font-size:13.5px; }
+</style>
+</head>
+<body>
+<div class="admin">
+  <aside class="sidebar"></aside>
+  <div class="workspace">
+    <header class="topbar"></header>
+    <main class="content">
+      <div class="page-head"><div><h1>Ustawienia</h1><p class="ph-sub">Konfiguracja sklepu, dostawy i konta</p></div></div>
+      <div class="set-layout">
+        <nav class="set-nav" id="setNav">
+          <button data-s="store" class="active">Sklep</button>
+          <button data-s="shipping">Dostawa</button>
+          <button data-s="payments">Płatności</button>
+          <button data-s="account">Konto i 2FA</button>
+          <button data-s="gdpr">RODO</button>
+        </nav>
+        <div>
+          <section class="set-pane active" data-pane="store">
+            <div class="card card-pad max640">
+              <h3 style="margin-bottom:18px">Dane sklepu</h3>
+              <div class="field"><label>Nazwa sklepu</label><input class="input" value="CarpPoint.pl"></div>
+              <div class="field"><label>E-mail kontaktowy</label><input class="input" value="sklep@carppoint.pl"></div>
+              <div class="field-row"><div class="field"><label>Waluta</label><select class="selectbox full input"><option>PLN (zł)</option><option>EUR (€)</option></select></div><div class="field"><label>Język</label><select class="selectbox full input"><option>Polski</option><option>English</option></select></div></div>
+              <div class="field" style="margin-bottom:0"><label>Próg darmowej dostawy (zł)</label><input class="input" value="200"></div>
+            </div>
+          </section>
+
+          <section class="set-pane" data-pane="shipping">
+            <div class="card max640">
+              <div class="card-head"><h3>Przewoźnicy i strefy</h3><button class="btn btn-outline btn-sm" onclick="AD.toast('Nowa strefa dostawy')">+ Strefa</button></div>
+              <div class="card-pad" id="carriers"></div>
+            </div>
+          </section>
+
+          <section class="set-pane" data-pane="payments">
+            <div class="card card-pad max640">
+              <h3 style="margin-bottom:18px">Metody płatności</h3>
+              <div id="pays"></div>
+            </div>
+          </section>
+
+          <section class="set-pane" data-pane="account">
+            <div class="card card-pad max640">
+              <h3 style="margin-bottom:18px">Bezpieczeństwo konta</h3>
+              <div class="field"><label>Zmień hasło</label><input class="input" type="password" placeholder="Nowe hasło"></div>
+              <hr class="divider" style="margin:16px 0">
+              <div style="display:flex;align-items:center;gap:12px"><span class="kpi-ic green" style="width:38px;height:38px"></span><div style="flex:1"><div style="font-weight:600">Uwierzytelnianie 2FA</div><div class="small muted">Aktywne · Google Authenticator</div></div><span class="pill pill-ok">Włączone</span></div>
+              <p class="field-hint" style="margin-top:12px">2FA jest wymagane dla ról ADMIN i SUPER_ADMIN.</p>
+            </div>
+          </section>
+
+          <section class="set-pane" data-pane="gdpr">
+            <div class="card card-pad max640">
+              <h3 style="margin-bottom:8px">RODO / GDPR</h3>
+              <p class="small muted" style="margin-bottom:18px">Zgodność z wymogami ochrony danych UE.</p>
+              <div class="zone-row" style="border-top:1px solid var(--ink-150)"><div style="flex:1"><div class="nm">Rejestr zgód</div><div class="small muted">Wersjonowanie polityki prywatności</div></div><button class="btn btn-outline btn-sm">Otwórz</button></div>
+              <div class="zone-row"><div style="flex:1"><div class="nm">Polityka retencji danych</div><div class="small muted">Anonimizacja po 730 dniach</div></div><button class="btn btn-outline btn-sm">Konfiguruj</button></div>
+              <div class="zone-row" style="border-bottom:none"><div style="flex:1"><div class="nm">Rejestr czynności przetwarzania</div><div class="small muted">RoPA — art. 30 RODO</div></div><button class="btn btn-outline btn-sm">Podgląd</button></div>
+            </div>
+          </section>
+
+          <div style="margin-top:18px;max-width:640px;display:flex;justify-content:flex-end"><button class="btn btn-primary" onclick="AD.toast('Ustawienia zapisane','ok')">Zapisz ustawienia</button></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="admin-data.js"></script>
+<script src="admin.js"></script>
+<script>
+AD.mount('settings','Ustawienia');
+document.querySelector('[data-pane="account"] .kpi-ic').innerHTML = AD.icon('shield');
+document.getElementById('setNav').addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(!b)return;document.querySelectorAll('#setNav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.set-pane').forEach(p=>p.classList.toggle('active',p.dataset.pane===b.dataset.s));});
+
+document.getElementById('carriers').innerHTML = [
+  ['InPost Paczkomat','od 9,99 zł · 3 500+ punktów',true],
+  ['Kurier DPD','od 14,99 zł · cała Polska',true],
+  ['Kurier DHL','od 19,99 zł · przesyłki gabarytowe',true],
+  ['Poczta Polska','od 11,99 zł · 2–3 dni',false],
+].map(([n,d,on])=>`<div class="zone-row"><span class="kpi-ic blue" style="width:36px;height:36px">${AD.icon('truck')}</span><div style="flex:1"><div class="nm">${n}</div><div class="small muted">${d}</div></div><label class="switch"><input type="checkbox" ${on?'checked':''}><span class="tr"></span></label></div>`).join('');
+
+document.getElementById('pays').innerHTML = [
+  ['Przelewy24','Główny operator · BLIK, karty, przelewy',true],
+  ['BLIK','Płatność kodem',true],
+  ['Karta płatnicza','Visa / Mastercard',true],
+  ['Za pobraniem','Płatność przy odbiorze',false],
+].map(([n,d,on])=>`<div class="zone-row"><span class="kpi-ic green" style="width:36px;height:36px">${AD.icon('coins')}</span><div style="flex:1"><div class="nm">${n}</div><div class="small muted">${d}</div></div><label class="switch"><input type="checkbox" ${on?'checked':''}><span class="tr"></span></label></div>`).join('');
+</script>
+</body>
+</html>

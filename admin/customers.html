@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klienci — CarpPoint Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="admin">
+  <aside class="sidebar"></aside>
+  <div class="workspace">
+    <header class="topbar"></header>
+    <main class="content">
+      <div class="page-head">
+        <div><h1>Klienci</h1><p class="ph-sub">Konta, role i historia zakupów</p></div>
+        <div class="head-actions"><button class="btn btn-outline" id="exportBtn"></button></div>
+      </div>
+      <div class="kpi-row" id="miniKpi" style="margin-bottom:20px"></div>
+      <div class="card">
+        <div class="toolbar">
+          <div class="seg" id="roleSeg"></div>
+          <div class="grow"></div>
+          <div class="tb-find" id="find"><input placeholder="Szukaj nazwy lub e-maila…" id="q"></div>
+          <select class="selectbox" id="sortSel"><option value="spent">Sortuj: wydatki</option><option value="orders">Liczba zamówień</option><option value="name">Nazwa A–Z</option><option value="joined">Najnowsi</option></select>
+        </div>
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr><th>Klient</th><th>Rola</th><th class="num">Zamówienia</th><th class="num">Wydano</th><th>Dołączył</th><th>Status</th><th class="c-actions"></th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div class="pager" id="pager"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="admin-data.js"></script>
+<script src="admin.js"></script>
+<script>
+AD.mount('customers','Klienci');
+document.getElementById('exportBtn').innerHTML = AD.icon('download')+' Eksport';
+document.getElementById('exportBtn').addEventListener('click',()=>AD.toast('Eksport CSV gotowy','ok'));
+document.getElementById('find').insertAdjacentHTML('afterbegin', AD.icon('search'));
+
+const state={ role:'all', q:'', sort:'spent', page:1, per:10 };
+
+const totalSpent = AD.customers.reduce((s,c)=>s+c.spent,0);
+const vips = AD.customers.filter(c=>c.vip).length;
+const staff = AD.customers.filter(c=>c.role!=='USER').length;
+document.getElementById('miniKpi').innerHTML=[
+  ['blue','users','Wszyscy klienci',AD.customers.length],
+  ['green','coins','Łączne wydatki',AD.zl(totalSpent)],
+  ['purple','star','Klienci VIP',vips],
+  ['amber','shield','Konta zespołu',staff],
+].map(([c,i,l,v])=>`<div class="kpi"><div class="kpi-top"><div class="kpi-ic ${c}">${AD.icon(i)}</div></div><div class="kpi-label">${l}</div><div class="kpi-value" style="font-size:23px">${v}</div></div>`).join('');
+
+const roles=["all","USER","MANAGER","ADMIN","SUPER_ADMIN"];
+const roleLabel={all:"Wszyscy",USER:"Klienci",MANAGER:"Managerowie",ADMIN:"Admini",SUPER_ADMIN:"Super Admini"};
+document.getElementById('roleSeg').innerHTML = roles.map(r=>{
+  const cnt=r==='all'?AD.customers.length:AD.customers.filter(c=>c.role===r).length;
+  return `<button data-r="${r}" class="${r==='all'?'active':''}">${roleLabel[r]} <span class="cnt">${cnt}</span></button>`;
+}).join('');
+
+function getList(){
+  let l=AD.customers.slice();
+  if(state.role!=='all') l=l.filter(c=>c.role===state.role);
+  if(state.q){ const q=state.q.toLowerCase(); l=l.filter(c=>c.name.toLowerCase().includes(q)||c.email.toLowerCase().includes(q)); }
+  if(state.sort==='spent') l.sort((a,b)=>b.spent-a.spent);
+  else if(state.sort==='orders') l.sort((a,b)=>b.orders-a.orders);
+  else if(state.sort==='name') l.sort((a,b)=>a.name.localeCompare(b.name,'pl'));
+  else if(state.sort==='joined') l.sort((a,b)=>b.joined.localeCompare(a.joined));
+  return l;
+}
+function render(){
+  const list=getList();
+  const pages=Math.max(1,Math.ceil(list.length/state.per));
+  state.page=Math.min(state.page,pages);
+  const slice=list.slice((state.page-1)*state.per,state.page*state.per);
+  document.getElementById('rows').innerHTML = slice.map(c=>`
+    <tr style="cursor:pointer" data-id="${c.id}">
+      <td><div class="tbl-cell-main"><span class="sb-av" style="width:34px;height:34px;font-size:12px;background:var(--brand-100);color:var(--brand-800)">${AD.initials(c.name)}</span><span style="min-width:0"><span class="nm" style="font-size:13px;display:flex;align-items:center;gap:7px">${c.name}${c.vip?'<span class="pill pill-purple no-dot" style="padding:1px 7px;font-size:10px">VIP</span>':''}</span><span class="sub">${c.email}</span></span></div></td>
+      <td><span class="role-badge role-${c.role}">${c.role}</span></td>
+      <td class="num">${c.orders}</td>
+      <td class="num" style="font-weight:700">${AD.zl(c.spent)}</td>
+      <td class="small muted">${c.joined}</td>
+      <td>${c.blocked?'<span class="pill pill-bad">Zablokowany</span>':'<span class="pill pill-ok">Aktywny</span>'}</td>
+      <td class="c-actions"><button class="ibtn" data-open="${c.id}">${AD.icon('chright')}</button></td>
+    </tr>`).join('') || `<tr><td colspan="7"><div class="empty">${AD.icon('users')}<p>Brak klientów</p></div></td></tr>`;
+  const from=list.length?(state.page-1)*state.per+1:0, to=Math.min(state.page*state.per,list.length);
+  let pb=`<button ${state.page<=1?'disabled':''} data-pg="${state.page-1}">${AD.icon('chleft')}</button>`;
+  for(let i=1;i<=pages;i++) pb+=`<button class="${i===state.page?'active':''}" data-pg="${i}">${i}</button>`;
+  pb+=`<button ${state.page>=pages?'disabled':''} data-pg="${state.page+1}">${AD.icon('chright')}</button>`;
+  document.getElementById('pager').innerHTML=`<span class="pinfo">Pokazano <b>${from}–${to}</b> z <b>${list.length}</b></span><div class="pbtns">${pb}</div>`;
+}
+document.getElementById('roleSeg').addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(!b)return;state.role=b.dataset.r;state.page=1;document.querySelectorAll('#roleSeg button').forEach(x=>x.classList.remove('active'));b.classList.add('active');render();});
+document.getElementById('q').addEventListener('input',e=>{state.q=e.target.value;state.page=1;render();});
+document.getElementById('sortSel').addEventListener('change',e=>{state.sort=e.target.value;render();});
+document.getElementById('pager').addEventListener('click',e=>{const b=e.target.closest('[data-pg]');if(!b||b.disabled)return;state.page=+b.dataset.pg;render();window.scrollTo({top:0,behavior:'smooth'});});
+document.getElementById('rows').addEventListener('click',e=>{const r=e.target.closest('[data-id]');if(r)openCust(+r.dataset.id);});
+
+const ROLES=["USER","MANAGER","ADMIN","SUPER_ADMIN"];
+function openCust(id){
+  const c=AD.customers.find(x=>x.id===id); if(!c) return;
+  const custOrders = AD.orders.filter(o=>o.customer===c.name).slice(0,4);
+  AD.openDrawer(`
+    <div class="drawer-head">
+      <div style="display:flex;align-items:center;gap:12px"><span class="sb-av" style="width:46px;height:46px;font-size:16px;background:var(--brand-100);color:var(--brand-800)">${AD.initials(c.name)}</span><div><h3>${c.name} ${c.vip?'<span class="pill pill-purple no-dot" style="font-size:10px">VIP</span>':''}</h3><div class="dh-sub">${c.email}</div></div></div>
+      <button class="ibtn" data-close-drawer>${AD.icon('x')}</button>
+    </div>
+    <div class="drawer-body">
+      <div class="grid-3" style="gap:12px;margin-bottom:16px">
+        <div class="card card-pad" style="text-align:center"><div class="kpi-value" style="font-size:22px">${c.orders}</div><div class="small muted">zamówień</div></div>
+        <div class="card card-pad" style="text-align:center"><div class="kpi-value" style="font-size:18px">${AD.zl(c.spent)}</div><div class="small muted">wydano</div></div>
+        <div class="card card-pad" style="text-align:center"><div class="kpi-value" style="font-size:18px">${c.orders?AD.zl(c.spent/c.orders):'—'}</div><div class="small muted">śr. koszyk</div></div>
+      </div>
+
+      <div class="card card-pad" style="margin-bottom:16px">
+        <div class="field" style="margin-bottom:12px"><label>Rola użytkownika</label>
+          <select class="selectbox full input" id="roleSel">${ROLES.map(r=>`<option ${r===c.role?'selected':''}>${r}</option>`).join('')}</select>
+          <p class="field-hint">Role nadają uprawnienia w panelu. ADMIN i wyżej wymaga 2FA.</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="small muted" style="flex:1">Status konta: ${c.blocked?'<b style="color:var(--bad-600)">Zablokowane</b>':'<b style="color:var(--ok-700)">Aktywne</b>'}</span>
+          <button class="btn ${c.blocked?'btn-primary':'btn-danger'} btn-sm" id="blockBtn">${AD.icon(c.blocked?'check':'ban')} ${c.blocked?'Odblokuj':'Zablokuj'}</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3 style="font-size:14px">Ostatnie zamówienia</h3><span class="small muted">${c.city}</span></div>
+        <div class="card-pad" style="padding-top:6px">
+          ${custOrders.length? custOrders.map(o=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--ink-150)"><span class="mono small" style="font-weight:700">${o.num.slice(-6)}</span>${AD.statusPill(o.status)}<span class="small muted" style="margin-left:auto">${o.date}</span><b style="white-space:nowrap">${AD.zl(o.total)}</b></div>`).join('') : `<div class="small muted" style="padding:14px 0">Brak zamówień powiązanych z tym kontem.</div>`}
+        </div>
+      </div>
+
+      <div class="card card-pad" style="margin-top:16px">
+        <div class="small muted" style="font-weight:600;margin-bottom:10px">RODO / GDPR</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="AD.toast('Eksport danych (JSON) gotowy','ok')">${AD.icon('download')} Eksport danych</button>
+          <button class="btn btn-danger btn-sm" onclick="AD.toast('Wniosek o usunięcie konta zarejestrowany')">${AD.icon('trash')} Usuń konto</button>
+        </div>
+      </div>
+    </div>
+    <div class="drawer-foot">
+      <button class="btn btn-ghost" data-close-drawer>Zamknij</button>
+      <button class="btn btn-primary" id="saveCust">Zapisz zmiany</button>
+    </div>`, {wide:false});
+
+  const d=document.getElementById('adDrawer');
+  d.querySelector('#blockBtn').addEventListener('click',()=>{ c.blocked=!c.blocked; AD.closeDrawer(); render(); AD.toast(c.blocked?'Konto zablokowane':'Konto odblokowane', c.blocked?'bad':'ok'); });
+  d.querySelector('#saveCust').addEventListener('click',()=>{ const nr=d.querySelector('#roleSel').value; const changed=nr!==c.role; c.role=nr; AD.closeDrawer(); render(); AD.toast(changed?'Rola zmieniona na '+nr:'Zmiany zapisane','ok'); });
+}
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Produkty — CarpPoint Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="admin">
+  <aside class="sidebar"></aside>
+  <div class="workspace">
+    <header class="topbar"></header>
+    <main class="content">
+      <div class="page-head">
+        <div><h1>Produkty</h1><p class="ph-sub" id="phSub">Zarządzaj asortymentem, cenami i stanem magazynowym</p></div>
+        <div class="head-actions">
+          <button class="btn btn-outline" id="exportBtn"></button>
+          <button class="btn btn-accent" id="newBtn"></button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <div class="seg" id="statusSeg">
+            <button data-f="all" class="active">Wszystkie <span class="cnt" id="cAll"></span></button>
+            <button data-f="ACTIVE">Aktywne <span class="cnt" id="cActive"></span></button>
+            <button data-f="DRAFT">Szkice <span class="cnt" id="cDraft"></span></button>
+            <button data-f="ARCHIVED">Archiwum <span class="cnt" id="cArch"></span></button>
+            <button data-f="low">Niski stan <span class="cnt" id="cLow"></span></button>
+          </div>
+          <div class="grow"></div>
+          <div class="tb-find" id="find"><input placeholder="Szukaj nazwy lub SKU…" id="q"></div>
+          <select class="selectbox" id="brandSel"><option value="">Wszystkie marki</option></select>
+          <select class="selectbox" id="sortSel">
+            <option value="sold">Sortuj: bestsellery</option>
+            <option value="name">Nazwa A–Z</option>
+            <option value="price-asc">Cena ↑</option>
+            <option value="price-desc">Cena ↓</option>
+            <option value="stock">Stan magazynowy ↑</option>
+          </select>
+        </div>
+
+        <div class="bulkbar" id="bulkbar">
+          <b><span id="bulkCount">0</span> zaznaczono</b>
+          <div class="bb-actions">
+            <button class="btn btn-outline btn-sm" id="bulkPrice">Zmień ceny</button>
+            <button class="btn btn-outline btn-sm" id="bulkActivate">Aktywuj</button>
+            <button class="btn btn-outline btn-sm" id="bulkArchive">Archiwizuj</button>
+            <button class="btn btn-outline btn-sm" id="bulkClear">Wyczyść</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th class="c-check"><input type="checkbox" class="chk" id="checkAll"></th>
+              <th>Produkt</th><th>SKU</th><th>Kategoria</th><th class="num">Cena</th>
+              <th>Magazyn</th><th>Status</th><th class="c-actions"></th>
+            </tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div class="pager" id="pager"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="admin-data.js"></script>
+<script src="admin.js"></script>
+<script>
+AD.mount('products','Produkty');
+document.getElementById('exportBtn').innerHTML = AD.icon('download')+' Eksport';
+document.getElementById('newBtn').innerHTML = AD.icon('plus')+' Nowy produkt';
+document.getElementById('find').insertAdjacentHTML('afterbegin', AD.icon('search'));
+
+const state = { f:'all', q:'', brand:'', sort:'sold', page:1, per:8, sel:new Set() };
+if(new URLSearchParams(location.search).get('filter')==='low'){ state.f='low'; }
+
+// brand options
+AD.brands.forEach(b=>{ const o=document.createElement('option'); o.value=b; o.textContent=b; document.getElementById('brandSel').appendChild(o); });
+
+// counts
+document.getElementById('cAll').textContent = AD.products.length;
+document.getElementById('cActive').textContent = AD.products.filter(p=>p.status==='ACTIVE').length;
+document.getElementById('cDraft').textContent = AD.products.filter(p=>p.status==='DRAFT').length;
+document.getElementById('cArch').textContent = AD.products.filter(p=>p.status==='ARCHIVED').length;
+document.getElementById('cLow').textContent = AD.products.filter(p=>p.stock<=p.low).length;
+
+const statusBadge = { ACTIVE:['Aktywny','ok'], DRAFT:['Szkic','warn'], ARCHIVED:['Archiwum','gray'] };
+
+function getList(){
+  let l = AD.products.slice();
+  if(state.f==='low') l=l.filter(p=>p.stock<=p.low);
+  else if(state.f!=='all') l=l.filter(p=>p.status===state.f);
+  if(state.brand) l=l.filter(p=>p.brand===state.brand);
+  if(state.q){ const q=state.q.toLowerCase(); l=l.filter(p=>p.name.toLowerCase().includes(q)||p.sku.toLowerCase().includes(q)); }
+  if(state.sort==='name') l.sort((a,b)=>a.name.localeCompare(b.name,'pl'));
+  else if(state.sort==='price-asc') l.sort((a,b)=>a.price-b.price);
+  else if(state.sort==='price-desc') l.sort((a,b)=>b.price-a.price);
+  else if(state.sort==='stock') l.sort((a,b)=>a.stock-b.stock);
+  else l.sort((a,b)=>b.sold-a.sold);
+  return l;
+}
+
+function render(){
+  const list = getList();
+  const pages = Math.max(1, Math.ceil(list.length/state.per));
+  state.page = Math.min(state.page, pages);
+  const slice = list.slice((state.page-1)*state.per, state.page*state.per);
+  document.getElementById('rows').innerHTML = slice.map(p=>{
+    const sb=statusBadge[p.status], sale=p.was&&p.was>p.price;
+    const pct = Math.min(100, p.stock/(p.low*3||1)*100);
+    return `<tr data-id="${p.id}">
+      <td class="c-check"><input type="checkbox" class="chk row-chk" data-id="${p.id}" ${state.sel.has(p.id)?'checked':''}></td>
+      <td><div class="tbl-cell-main"><span class="tbl-thumb ph" data-label="${AD.esc(p.label)}"></span><span style="min-width:0"><span class="nm" style="display:block;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${AD.esc(p.name)}</span><span class="sub">${p.brand} · ${p.variants} ${p.variants===1?'wariant':'warianty'}</span></span></div></td>
+      <td><span class="mono small muted">${p.sku}</span></td>
+      <td class="small">${p.cat}</td>
+      <td class="num"><b>${AD.zl(p.price)}</b>${sale?`<br><span class="small muted" style="text-decoration:line-through">${AD.zl(p.was)}</span>`:''}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="stock-txt" style="color:${AD.stockColor(p.stock,p.low)};min-width:46px">${p.stock} szt.</span>
+          <span class="stockbar"><i style="width:${pct}%;background:${AD.stockColor(p.stock,p.low)}"></i></span>
+        </div>
+      </td>
+      <td><span class="pill pill-${sb[1]} no-dot">${sb[0]}</span></td>
+      <td class="c-actions"><div class="row-actions">
+        <button class="ibtn" data-edit="${p.id}" title="Edytuj">${AD.icon('edit')}</button>
+        <button class="ibtn" data-view="${p.id}" title="Podgląd w sklepie">${AD.icon('eye')}</button>
+        <button class="ibtn danger" data-del="${p.id}" title="Usuń">${AD.icon('trash')}</button>
+      </div></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="8"><div class="empty">${AD.icon('search')}<p>Brak produktów dla wybranych filtrów</p></div></td></tr>`;
+
+  // pager
+  const from = list.length? (state.page-1)*state.per+1 : 0;
+  const to = Math.min(state.page*state.per, list.length);
+  let pb='';
+  pb += `<button ${state.page<=1?'disabled':''} data-pg="${state.page-1}">${AD.icon('chleft')}</button>`;
+  for(let i=1;i<=pages;i++) pb += `<button class="${i===state.page?'active':''}" data-pg="${i}">${i}</button>`;
+  pb += `<button ${state.page>=pages?'disabled':''} data-pg="${state.page+1}">${AD.icon('chright')}</button>`;
+  document.getElementById('pager').innerHTML = `<span class="pinfo">Pokazano <b>${from}–${to}</b> z <b>${list.length}</b> produktów</span><div class="pbtns">${pb}</div>`;
+
+  syncBulk(); syncCheckAll();
+}
+
+function syncBulk(){
+  const bb=document.getElementById('bulkbar');
+  bb.classList.toggle('show', state.sel.size>0);
+  document.getElementById('bulkCount').textContent = state.sel.size;
+}
+function syncCheckAll(){
+  const visible = getList().slice((state.page-1)*state.per, state.page*state.per).map(p=>p.id);
+  const all = visible.length && visible.every(id=>state.sel.has(id));
+  document.getElementById('checkAll').checked = all;
+}
+
+// events
+document.getElementById('statusSeg').addEventListener('click', e=>{ const b=e.target.closest('[data-f]'); if(!b)return; state.f=b.dataset.f; state.page=1; document.querySelectorAll('#statusSeg button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); render(); });
+document.getElementById('q').addEventListener('input', e=>{ state.q=e.target.value; state.page=1; render(); });
+document.getElementById('brandSel').addEventListener('change', e=>{ state.brand=e.target.value; state.page=1; render(); });
+document.getElementById('sortSel').addEventListener('change', e=>{ state.sort=e.target.value; render(); });
+document.getElementById('pager').addEventListener('click', e=>{ const b=e.target.closest('[data-pg]'); if(!b||b.disabled)return; state.page=+b.dataset.pg; render(); window.scrollTo({top:0,behavior:'smooth'}); });
+
+document.getElementById('rows').addEventListener('change', e=>{ const c=e.target.closest('.row-chk'); if(!c)return; const id=+c.dataset.id; c.checked?state.sel.add(id):state.sel.delete(id); syncBulk(); syncCheckAll(); });
+document.getElementById('checkAll').addEventListener('change', e=>{ const vis=getList().slice((state.page-1)*state.per,state.page*state.per).map(p=>p.id); vis.forEach(id=> e.target.checked?state.sel.add(id):state.sel.delete(id)); render(); });
+
+document.getElementById('rows').addEventListener('click', e=>{
+  const ed=e.target.closest('[data-edit]'); if(ed){ openEdit(+ed.dataset.edit); return; }
+  const v=e.target.closest('[data-view]'); if(v){ AD.toast('Otwieranie podglądu w sklepie…'); return; }
+  const d=e.target.closest('[data-del]'); if(d){ AD.toast('Produkt przeniesiony do kosza','bad'); return; }
+});
+
+document.getElementById('bulkClear').addEventListener('click', ()=>{ state.sel.clear(); render(); });
+document.getElementById('bulkActivate').addEventListener('click', ()=>{ AD.toast(state.sel.size+' produktów aktywowano','ok'); state.sel.clear(); render(); });
+document.getElementById('bulkArchive').addEventListener('click', ()=>{ AD.toast(state.sel.size+' produktów zarchiwizowano'); state.sel.clear(); render(); });
+document.getElementById('bulkPrice').addEventListener('click', ()=>{ AD.toast('Masowa zmiana cen — '+state.sel.size+' produktów'); });
+document.getElementById('newBtn').addEventListener('click', ()=>openEdit(null));
+document.getElementById('exportBtn').addEventListener('click', ()=>AD.toast('Eksport CSV gotowy','ok'));
+
+// ---- edit drawer ----
+function openEdit(id){
+  const p = id? AD.products.find(x=>x.id===id) : { name:'',sku:'',brand:AD.brands[0],cat:'Karp',price:'',was:'',stock:'',low:'',status:'DRAFT',label:'nowy produkt',variants:1 };
+  const isNew = !id;
+  const catOpts = [...new Set(AD.products.map(x=>x.cat))];
+  AD.openDrawer(`
+    <div class="drawer-head">
+      <div><h3>${isNew?'Nowy produkt':'Edytuj produkt'}</h3><div class="dh-sub">${isNew?'Utwórz nową pozycję w katalogu':p.sku}</div></div>
+      <button class="ibtn" data-close-drawer>${AD.icon('x')}</button>
+    </div>
+    <div class="drawer-body">
+      <div class="dtabs"><button class="active" data-dt="general">Ogólne</button><button data-dt="price">Cena i magazyn</button><button data-dt="seo">SEO</button></div>
+
+      <div data-pane="general">
+        <div style="display:flex;gap:14px;margin-bottom:16px">
+          <div class="ph" data-label="${AD.esc(p.label)}" style="width:90px;height:90px;border-radius:var(--r-md);flex:none"></div>
+          <div style="flex:1"><button class="btn btn-outline btn-sm" onclick="AD.toast('Wybór pliku zdjęcia')">${AD.icon('plus')} Dodaj zdjęcia</button><p class="field-hint">PNG/JPG do 5 MB. Pierwsze zdjęcie to miniatura.</p></div>
+        </div>
+        <div class="field"><label>Nazwa produktu</label><input class="input" id="fName" value="${AD.esc(p.name)}" placeholder="np. Scopex-Squid kulki 20mm"></div>
+        <div class="field-row">
+          <div class="field"><label>Marka</label><select class="selectbox full input" id="fBrand">${AD.brands.map(b=>`<option ${b===p.brand?'selected':''}>${b}</option>`).join('')}</select></div>
+          <div class="field"><label>Kategoria</label><select class="selectbox full input" id="fCat">${catOpts.map(c=>`<option ${c===p.cat?'selected':''}>${c}</option>`).join('')}</select></div>
+        </div>
+        <div class="field"><label>Opis</label><textarea class="input" placeholder="Opis produktu widoczny w sklepie…">${isNew?'':'Kultowe kulki proteinowe na bazie mączki rybnej i ekstraktu kałamarnicy.'}</textarea></div>
+      </div>
+
+      <div data-pane="price" style="display:none">
+        <div class="field-row">
+          <div class="field"><label>Cena (zł)</label><input class="input" id="fPrice" value="${p.price}" inputmode="decimal"></div>
+          <div class="field"><label>Cena „było” (zł)</label><input class="input" id="fWas" value="${p.was||''}" placeholder="opcjonalnie"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Stan magazynowy</label><input class="input" id="fStock" value="${p.stock}" inputmode="numeric"></div>
+          <div class="field"><label>Próg niskiego stanu</label><input class="input" id="fLow" value="${p.low}" inputmode="numeric"></div>
+        </div>
+        <div class="field"><label>SKU</label><input class="input" id="fSku" value="${AD.esc(p.sku)}" placeholder="TB-SCS-20-1K"></div>
+        <div class="field"><label class="switch"><input type="checkbox" ${p.status==='ACTIVE'?'checked':''} id="fActive"><span class="tr"></span> Produkt aktywny (widoczny w sklepie)</label></div>
+        <p class="field-hint">VAT 23% naliczany automatycznie. Każdy produkt ma min. 1 wariant.</p>
+      </div>
+
+      <div data-pane="seo" style="display:none">
+        <div class="field"><label>Tytuł SEO</label><input class="input" value="${AD.esc(p.name)} | CarpPoint.pl"></div>
+        <div class="field"><label>Slug (URL)</label><input class="input" value="${(p.name||'nowy-produkt').toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,40)}"></div>
+        <div class="field"><label>Opis meta</label><textarea class="input" placeholder="Opis dla wyszukiwarek (max 160 znaków)"></textarea></div>
+      </div>
+    </div>
+    <div class="drawer-foot">
+      <button class="btn btn-ghost" data-close-drawer>Anuluj</button>
+      <button class="btn btn-primary" id="saveProd">${isNew?'Utwórz produkt':'Zapisz zmiany'}</button>
+    </div>`, {wide:true});
+
+  const d=document.getElementById('adDrawer');
+  d.querySelector('.dtabs').addEventListener('click', e=>{ const b=e.target.closest('[data-dt]'); if(!b)return; d.querySelectorAll('.dtabs button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); d.querySelectorAll('[data-pane]').forEach(p=>p.style.display=p.dataset.pane===b.dataset.dt?'':'none'); });
+  d.querySelector('#saveProd').addEventListener('click', ()=>{ AD.closeDrawer(); AD.toast(isNew?'Produkt utworzony':'Zmiany zapisane','ok'); });
+}
+
+render();
+</script>
+</body>
+</html>

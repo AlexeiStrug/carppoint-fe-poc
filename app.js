@@ -444,6 +444,7 @@
           <div class="pay-icons">
             <span class="pay-chip">Przelewy24</span><span class="pay-chip">BLIK</span>
             <span class="pay-chip">VISA</span><span class="pay-chip">Mastercard</span><span class="pay-chip">InPost</span>
+            <a class="pay-chip" href="admin/login.html" style="background:rgba(255,255,255,.06);text-decoration:none">Panel admina</a>
           </div>
         </div>
       </div>

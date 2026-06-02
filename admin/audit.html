@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dziennik zdarzeń — CarpPoint Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+<style>
+.act-tag { font-family:var(--font-mono); font-size:11.5px; font-weight:700; padding:2px 8px; border-radius:var(--r-sm); background:var(--ink-100); color:var(--ink-700); }
+.act-tag.status { background:var(--brand-50); color:var(--brand-700); }
+.act-tag.user { background:var(--purple-50); color:var(--purple-700); }
+.act-tag.product, .act-tag.stock { background:var(--info-50); color:var(--info-700); }
+.act-tag.review, .act-tag.coupon, .act-tag.promo, .act-tag.order { background:var(--accent-50); color:var(--accent-600); }
+.change-cell { font-size:12.5px; color:var(--ink-600); }
+.change-cell .mono { font-size:11.5px; }
+</style>
+</head>
+<body>
+<div class="admin">
+  <aside class="sidebar"></aside>
+  <div class="workspace">
+    <header class="topbar"></header>
+    <main class="content">
+      <div class="page-head">
+        <div><h1>Dziennik zdarzeń</h1><p class="ph-sub">Niezmienny rejestr działań administracyjnych</p></div>
+        <div class="head-actions"><button class="btn btn-outline" id="exportBtn"></button></div>
+      </div>
+      <div class="card">
+        <div class="toolbar">
+          <div class="tb-find" id="find"><input placeholder="Szukaj po wykonawcy lub encji…" id="q"></div>
+          <select class="selectbox" id="whoSel"><option value="">Wszyscy wykonawcy</option></select>
+          <select class="selectbox" id="actSel"><option value="">Wszystkie akcje</option></select>
+          <div class="grow"></div>
+          <span class="small muted" style="display:inline-flex;align-items:center;gap:6px">Rejestr tylko do odczytu</span>
+        </div>
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr><th>Czas</th><th>Wykonawca</th><th>Akcja</th><th>Encja</th><th>Zmiana</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="admin-data.js"></script>
+<script src="admin.js"></script>
+<script>
+AD.mount('audit','Dziennik');
+document.getElementById('exportBtn').innerHTML = AD.icon('download')+' Eksport';
+document.getElementById('exportBtn').addEventListener('click',()=>AD.toast('Eksport dziennika gotowy','ok'));
+document.getElementById('find').insertAdjacentHTML('afterbegin', AD.icon('search'));
+document.querySelector('.toolbar .small.muted').insertAdjacentHTML('afterbegin', AD.icon('shield'));
+document.querySelector('.toolbar .small.muted svg').style.cssText='width:14px;height:14px;vertical-align:-2px';
+
+const state={ q:'', who:'', act:'' };
+[...new Set(AD.audit.map(a=>a.who))].forEach(w=>{ const o=document.createElement('option');o.value=w;o.textContent=w;document.getElementById('whoSel').appendChild(o); });
+[...new Set(AD.audit.map(a=>a.action.split('.')[0]))].forEach(a=>{ const o=document.createElement('option');o.value=a;o.textContent=a;document.getElementById('actSel').appendChild(o); });
+
+function render(){
+  let l=AD.audit.slice();
+  if(state.who) l=l.filter(a=>a.who===state.who);
+  if(state.act) l=l.filter(a=>a.action.startsWith(state.act));
+  if(state.q){ const q=state.q.toLowerCase(); l=l.filter(a=>a.who.toLowerCase().includes(q)||a.entity.toLowerCase().includes(q)||a.action.includes(q)); }
+  document.getElementById('rows').innerHTML = l.map(a=>{
+    const cat=a.action.split('.')[0];
+    return `<tr>
+      <td class="mono small muted" style="white-space:nowrap">${a.ts}</td>
+      <td><div class="tbl-cell-main"><span class="sb-av" style="width:28px;height:28px;font-size:10px;background:var(--brand-100);color:var(--brand-800)">${AD.initials(a.who)}</span><span style="min-width:0"><span class="nm" style="font-size:12.5px">${a.who}</span><span class="role-badge role-${a.role}" style="font-size:9px">${a.role}</span></span></div></td>
+      <td><span class="act-tag ${cat}">${a.action}</span></td>
+      <td class="small">${AD.esc(a.entity)}</td>
+      <td class="change-cell">${AD.esc(a.change)}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="5"><div class="empty">${AD.icon('history')}<p>Brak zdarzeń</p></div></td></tr>`;
+}
+document.getElementById('q').addEventListener('input',e=>{state.q=e.target.value;render();});
+document.getElementById('whoSel').addEventListener('change',e=>{state.who=e.target.value;render();});
+document.getElementById('actSel').addEventListener('change',e=>{state.act=e.target.value;render();});
+render();
+</script>
+</body>
+</html>

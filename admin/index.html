@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pulpit — CarpPoint Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="admin">
+  <aside class="sidebar"></aside>
+  <div class="workspace">
+    <header class="topbar"></header>
+    <main class="content">
+      <div class="page-head">
+        <div>
+          <h1>Pulpit</h1>
+          <p class="ph-sub">Przegląd sklepu · poniedziałek, 1 czerwca 2026</p>
+        </div>
+        <div class="head-actions">
+          <div class="timeframe" id="tf">
+            <button data-tf="today" class="active">Dziś</button>
+            <button data-tf="week">Tydzień</button>
+            <button data-tf="month">Miesiąc</button>
+          </div>
+          <button class="btn btn-outline" id="exportBtn"></button>
+        </div>
+      </div>
+
+      <!-- KPI -->
+      <div class="kpi-row" id="kpiRow"></div>
+
+      <!-- revenue + orders by status -->
+      <div class="grid-2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-head">
+            <h3>Przychód — ostatnie 14 dni</h3>
+            <span class="legend"><span class="lg"><span class="sw" style="background:var(--brand-600)"></span>Przychód dzienny (zł)</span></span>
+          </div>
+          <div class="card-pad" id="revChart"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Zamówienia wg statusu</h3><a class="ch-link" href="orders.html">Wszystkie</a></div>
+          <div class="card-pad" id="statusBars"></div>
+        </div>
+      </div>
+
+      <!-- funnel + low stock + top products -->
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-head"><h3>Lejek konwersji</h3><span class="small muted">30 dni</span></div>
+          <div class="card-pad"><div class="funnel" id="funnel"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Niski stan magazynowy</h3><a class="ch-link" href="products.html?filter=low">Magazyn</a></div>
+          <div class="card-pad" id="lowStock"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Najczęściej kupowane</h3><a class="ch-link" href="products.html">Produkty</a></div>
+          <div class="card-pad" id="topProducts"></div>
+        </div>
+      </div>
+
+      <!-- recent orders -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-head"><h3>Ostatnie zamówienia</h3><a class="ch-link" href="orders.html">Zobacz wszystkie</a></div>
+        <div class="table-wrap">
+          <table class="tbl" id="recentOrders"></table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="admin-data.js"></script>
+<script src="admin.js"></script>
+<script>
+AD.mount('dash','Pulpit');
+document.getElementById('exportBtn').innerHTML = AD.icon('download')+' Eksport CSV';
+document.getElementById('exportBtn').addEventListener('click', ()=>AD.toast('Raport CSV wygenerowany','ok'));
+document.querySelector('#lowStock').closest('.card').querySelector('.ch-link').innerHTML = 'Magazyn '+AD.icon('chright');
+document.querySelector('#recentOrders').closest('.card').querySelector('.ch-link').innerHTML = 'Zobacz wszystkie '+AD.icon('chright');
+
+// ---- KPI ----
+const k = AD.kpi;
+const kpis = [
+  ['green','coins','Przychód dziś', AD.zl(k.revToday.v), k.revToday.v, k.revToday.prev],
+  ['amber','cart','Zamówienia dziś', k.ordersToday.v, k.ordersToday.v, k.ordersToday.prev],
+  ['blue','users','Nowi klienci (7 dni)', k.newUsers.v, k.newUsers.v, k.newUsers.prev],
+  ['purple','up','Konwersja', k.conversion.v.toFixed(1).replace('.',',')+'%', k.conversion.v, k.conversion.prev],
+];
+document.getElementById('kpiRow').innerHTML = kpis.map(([c,i,l,disp,cur,prev])=>`
+  <div class="kpi">
+    <div class="kpi-top"><div class="kpi-ic ${c}">${AD.icon(i)}</div>${AD.trend(cur,prev)}</div>
+    <div class="kpi-label">${l}</div>
+    <div class="kpi-value">${disp}</div>
+  </div>`).join('');
+
+// ---- revenue chart ----
+document.getElementById('revChart').innerHTML = AD.barChart(AD.revenue14, AD.revenueDays, {h:196});
+
+// ---- orders by status ----
+const counts = {};
+AD.orders.forEach(o=> counts[o.status]=(counts[o.status]||0)+1);
+const order = ["PENDING","PAID","PROCESSING","SHIPPED","DELIVERED","CANCELLED","REFUNDED"];
+const maxC = Math.max(...order.map(s=>counts[s]||0));
+const palette = { warn:'#E0A03A', info:'#2C72BE', purple:'#7A5BC2', brand:'#40916C', ok:'#22945C', gray:'#9AA3AD', bad:'#C2351B' };
+document.getElementById('statusBars').innerHTML = order.map(s=>{
+  const m=AD.statusMap[s], c=counts[s]||0, col=palette[m[1]];
+  return `<div class="hbar-row"><span class="lbl"><span class="pill pill-${m[1]} no-dot" style="padding:2px 8px">${m[0]}</span></span><div class="track"><i style="width:${maxC?(c/maxC*100):0}%;background:${col}"></i></div><span class="val">${c}</span></div>`;
+}).join('');
+
+// ---- funnel ----
+const f = AD.funnel; const fmax=f[0][1];
+document.getElementById('funnel').innerHTML = f.map((row,i)=>{
+  const [label,val]=row; const w=(val/fmax*100).toFixed(1);
+  const conv = i>0? ' ('+(val/f[i-1][1]*100).toFixed(1)+'% z poprz.)':'';
+  return `<div class="funnel-step ${i>=2?'':''}"><div class="fill" style="width:${w}%"></div><div class="ft"><b>${label}</b><span class="v">${AD.num(val)}${conv?'<span style="opacity:.7;font-weight:500;font-size:11px">'+conv+'</span>':''}</span></div></div>`;
+}).join('');
+
+// ---- low stock ----
+const low = AD.products.filter(p=>p.stock<=p.low).sort((a,b)=>a.stock-b.stock).slice(0,5);
+document.getElementById('lowStock').innerHTML = low.map(p=>`
+  <div class="alert-item">
+    <span class="ai-ic">${AD.icon(p.stock===0?'alert':'box')}</span>
+    <div style="flex:1;min-width:0">
+      <div class="nm" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${AD.esc(p.name)}</div>
+      <div class="sub">${p.sku} · próg ${p.low} szt.</div>
+    </div>
+    <span class="stock-txt" style="color:${AD.stockColor(p.stock,p.low)}">${p.stock} szt.</span>
+  </div>`).join('');
+
+// ---- top products ----
+const topP = AD.products.slice().sort((a,b)=>b.sold-a.sold).slice(0,5);
+const tmax = topP[0].sold;
+document.getElementById('topProducts').innerHTML = topP.map((p,i)=>`
+  <div class="hbar-row">
+    <span class="lbl" style="width:auto;flex:1;gap:9px;overflow:hidden"><b style="font-family:var(--font-mono);color:var(--ink-400);font-size:12px">${i+1}</b><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px">${AD.esc(p.name)}</span></span>
+    <span class="val">${AD.num(p.sold)}</span>
+  </div>`).join('');
+
+// ---- recent orders ----
+const ro = AD.orders.slice(0,6);
+document.getElementById('recentOrders').innerHTML = `
+  <thead><tr><th>Numer</th><th>Klient</th><th>Status</th><th>Przewoźnik</th><th class="num">Kwota</th><th>Data</th></tr></thead>
+  <tbody>${ro.map(o=>`
+    <tr style="cursor:pointer" onclick="location.href='orders.html'">
+      <td><span class="mono" style="font-size:12.5px;font-weight:700">${o.num.slice(-6)}</span></td>
+      <td><div class="tbl-cell-main"><span class="sb-av" style="width:30px;height:30px;font-size:11px;background:var(--brand-100);color:var(--brand-800)">${AD.initials(o.customer)}</span><span class="nm" style="font-size:13px">${o.customer}</span></div></td>
+      <td>${AD.statusPill(o.status)}</td>
+      <td class="small muted">${o.carrier}</td>
+      <td class="num" style="font-weight:700">${AD.zl(o.total)}</td>
+      <td class="small muted">${o.date}</td>
+    </tr>`).join('')}</tbody>`;
+
+// timeframe toggle (visual)
+document.getElementById('tf').addEventListener('click', e=>{
+  const b=e.target.closest('[data-tf]'); if(!b) return;
+  document.querySelectorAll('#tf button').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  const map={ today:[AD.zl(k.revToday.v),k.revToday.v,k.revToday.prev], week:[AD.zl(k.revWeek.v),k.revWeek.v,k.revWeek.prev], month:[AD.zl(k.revMonth.v),k.revMonth.v,k.revMonth.prev] };
+  const [disp,cur,prev]=map[b.dataset.tf];
+  const card=document.querySelector('#kpiRow .kpi');
+  card.querySelector('.kpi-value').textContent=disp;
+  card.querySelector('.kpi-label').textContent = b.dataset.tf==='today'?'Przychód dziś':b.dataset.tf==='week'?'Przychód (7 dni)':'Przychód (30 dni)';
+  card.querySelector('.kpi-top').innerHTML = '<div class="kpi-ic green">'+AD.icon('coins')+'</div>'+AD.trend(cur,prev);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kategorie — CarpPoint Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+<style>
+.tree { max-width:760px; }
+.tnode { background:#fff; border:1px solid var(--ink-200); border-radius:var(--r-md); margin-bottom:8px; }
+.tnode .trow { display:flex; align-items:center; gap:12px; padding:13px 14px; }
+.tnode.child { margin-left:34px; background:var(--ink-50); }
+.tdrag { color:var(--ink-300); cursor:grab; display:grid; place-items:center; }
+.tdrag svg { width:18px; height:18px; }
+.tnode .tname { font-weight:600; font-size:14px; }
+.tnode .tslug { font-family:var(--font-mono); font-size:11.5px; color:var(--ink-400); }
+.tnode .tcount { margin-left:auto; font-size:12.5px; color:var(--ink-500); }
+.tnode .tactions { display:flex; gap:2px; }
+.tgroup { margin-bottom:8px; }
+</style>
+</head>
+<body>
+<div class="admin">
+  <aside class="sidebar"></aside>
+  <div class="workspace">
+    <header class="topbar"></header>
+    <main class="content">
+      <div class="page-head">
+        <div><h1>Kategorie</h1><p class="ph-sub">Drzewo kategorii, kolejność i pola SEO</p></div>
+        <div class="head-actions"><button class="btn btn-accent" id="newBtn"></button></div>
+      </div>
+      <div class="card card-pad">
+        <p class="small muted" style="margin-bottom:16px;display:flex;align-items:center;gap:7px" id="hint">Przeciągnij, aby zmienić kolejność. Kliknij kategorię, aby edytować nazwę, slug i SEO.</p>
+        <div class="tree" id="tree"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="admin-data.js"></script>
+<script src="admin.js"></script>
+<script>
+AD.mount('categories','Kategorie');
+document.getElementById('newBtn').innerHTML = AD.icon('plus')+' Nowa kategoria';
+document.getElementById('hint').insertAdjacentHTML('afterbegin', AD.icon('layers'));
+document.querySelector('#hint svg').style.cssText='width:15px;height:15px';
+
+function render(){
+  const roots = AD.categories.filter(c=>!c.parent).sort((a,b)=>a.order-b.order);
+  document.getElementById('tree').innerHTML = roots.map(r=>{
+    const kids = AD.categories.filter(c=>c.parent===r.id).sort((a,b)=>a.order-b.order);
+    return `<div class="tgroup">
+      ${node(r,false)}
+      ${kids.map(k=>node(k,true)).join('')}
+    </div>`;
+  }).join('');
+}
+function node(c,child){
+  return `<div class="tnode ${child?'child':''}" data-id="${c.id}">
+    <div class="trow">
+      <span class="tdrag">${AD.icon('dots')}</span>
+      <span class="tbl-thumb ph" data-label="${c.slug}" style="width:34px;height:34px"></span>
+      <span style="min-width:0"><span class="tname">${c.name}</span><br><span class="tslug">/${c.slug}</span></span>
+      <span class="tcount">${AD.num(c.products)} produktów</span>
+      <span class="tactions">
+        <button class="ibtn" data-edit="${c.id}">${AD.icon('edit')}</button>
+        <button class="ibtn danger" data-del="${c.id}">${AD.icon('trash')}</button>
+      </span>
+    </div>
+  </div>`;
+}
+document.getElementById('tree').addEventListener('click',e=>{
+  const ed=e.target.closest('[data-edit]'); if(ed){ openCat(AD.categories.find(c=>c.id===+ed.dataset.edit)); return; }
+  const del=e.target.closest('[data-del]'); if(del){ AD.toast('Kategoria usunięta','bad'); return; }
+});
+document.getElementById('newBtn').addEventListener('click',()=>openCat(null));
+
+function openCat(c){
+  const isNew=!c; c=c||{name:'',slug:'',parent:null,products:0};
+  const parents=AD.categories.filter(x=>!x.parent);
+  AD.openDrawer(`
+    <div class="drawer-head"><div><h3>${isNew?'Nowa kategoria':'Edytuj kategorię'}</h3><div class="dh-sub">${isNew?'Dodaj do drzewa':'/'+c.slug}</div></div><button class="ibtn" data-close-drawer>${AD.icon('x')}</button></div>
+    <div class="drawer-body">
+      <div style="display:flex;gap:14px;margin-bottom:16px"><div class="ph" data-label="${c.slug||'ikona'}" style="width:80px;height:80px;border-radius:var(--r-md);flex:none"></div><div style="flex:1"><button class="btn btn-outline btn-sm" onclick="AD.toast('Wybór obrazka')">${AD.icon('plus')} Obraz kategorii</button></div></div>
+      <div class="field"><label>Nazwa</label><input class="input" value="${AD.esc(c.name)}" placeholder="np. Kulki proteinowe"></div>
+      <div class="field"><label>Slug (URL)</label><input class="input mono" value="${AD.esc(c.slug)}" placeholder="kulki-proteinowe"></div>
+      <div class="field"><label>Kategoria nadrzędna</label><select class="selectbox full input"><option value="">— główna —</option>${parents.map(p=>`<option ${c.parent===p.id?'selected':''}>${p.name}</option>`).join('')}</select></div>
+      <hr class="divider" style="margin:18px 0"><div class="small muted" style="font-weight:600;margin-bottom:12px">SEO</div>
+      <div class="field"><label>Tytuł SEO</label><input class="input" value="${AD.esc(c.name)} — CarpPoint.pl"></div>
+      <div class="field" style="margin-bottom:0"><label>Opis meta</label><textarea class="input" placeholder="Opis kategorii dla wyszukiwarek"></textarea></div>
+    </div>
+    <div class="drawer-foot"><button class="btn btn-ghost" data-close-drawer>Anuluj</button><button class="btn btn-primary" id="saveCat">${isNew?'Utwórz':'Zapisz'}</button></div>`);
+  document.getElementById('adDrawer').querySelector('#saveCat').addEventListener('click',()=>{ AD.closeDrawer(); AD.toast(isNew?'Kategoria utworzona':'Zmiany zapisane','ok'); });
+}
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kupony i promocje — CarpPoint Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+<style>
+.code-chip { font-family:var(--font-mono); font-weight:700; font-size:13px; background:var(--ink-100); padding:4px 10px; border-radius:var(--r-sm); letter-spacing:.04em; display:inline-flex; align-items:center; gap:7px; }
+.code-chip .cp { color:var(--ink-400); }
+.usage-bar { width:120px; height:6px; background:var(--ink-150); border-radius:3px; overflow:hidden; }
+.usage-bar i { display:block; height:100%; background:var(--brand-600); border-radius:3px; }
+</style>
+</head>
+<body>
+<div class="admin">
+  <aside class="sidebar"></aside>
+  <div class="workspace">
+    <header class="topbar"></header>
+    <main class="content">
+      <div class="page-head">
+        <div><h1>Kupony i promocje</h1><p class="ph-sub">Kody rabatowe, wyprzedaże i zestawy</p></div>
+        <div class="head-actions"><button class="btn btn-accent" id="newBtn"></button></div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-head"><h3>Kody rabatowe</h3><div class="seg" id="statusSeg"></div></div>
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr><th>Kod</th><th>Typ</th><th>Wartość</th><th>Min. koszyk</th><th>Wykorzystanie</th><th>Okres</th><th>Status</th><th class="c-actions"></th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Promocje automatyczne</h3><button class="btn btn-outline btn-sm" id="newPromo"></button></div>
+        <div class="card-pad" id="promos"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="admin-data.js"></script>
+<script src="admin.js"></script>
+<script>
+AD.mount('coupons','Kupony');
+document.getElementById('newBtn').innerHTML = AD.icon('plus')+' Nowy kupon';
+document.getElementById('newPromo').innerHTML = AD.icon('plus')+' Nowa promocja';
+const state={ f:'all' };
+const CST={ ACTIVE:['Aktywny','ok'], EXPIRED:['Wygasł','gray'], SCHEDULED:['Zaplanowany','info'] };
+const TYPE={ percent:'Procent', fixed:'Kwota', shipping:'Dostawa' };
+
+function renderSeg(){
+  const segs=[['all','Wszystkie'],['ACTIVE','Aktywne'],['SCHEDULED','Zaplanowane'],['EXPIRED','Wygasłe']];
+  document.getElementById('statusSeg').innerHTML = segs.map(([f,l])=>{ const n=f==='all'?AD.coupons.length:AD.coupons.filter(c=>c.status===f).length; return `<button data-f="${f}" class="${f===state.f?'active':''}">${l} <span class="cnt">${n}</span></button>`; }).join('');
+}
+function valDisp(c){ return c.type==='percent'?c.value+'%': c.type==='fixed'?AD.zl(c.value): 'Darmowa dostawa'; }
+function render(){
+  renderSeg();
+  let l=AD.coupons.slice(); if(state.f!=='all') l=l.filter(c=>c.status===state.f);
+  document.getElementById('rows').innerHTML = l.map(c=>{
+    const usage=c.limit?Math.min(100,c.used/c.limit*100):100;
+    return `<tr>
+      <td><span class="code-chip">${c.code}<button class="ibtn" style="width:22px;height:22px" title="Kopiuj" data-copy="${c.code}">${AD.icon('copy')}</button></span><div class="small muted" style="margin-top:4px">${c.desc}</div></td>
+      <td class="small">${TYPE[c.type]}</td>
+      <td style="font-weight:700">${valDisp(c)}</td>
+      <td class="small">${c.min?AD.zl(c.min):'—'}</td>
+      <td><div style="display:flex;align-items:center;gap:9px"><span class="small" style="font-variant-numeric:tabular-nums;min-width:74px">${AD.num(c.used)}${c.limit?' / '+AD.num(c.limit):' / ∞'}</span><span class="usage-bar"><i style="width:${usage}%"></i></span></div></td>
+      <td class="small muted">${c.from.slice(5)} – ${c.to.slice(5)}</td>
+      <td><span class="pill pill-${CST[c.status][1]} ${c.status==='EXPIRED'?'no-dot':''}">${CST[c.status][0]}</span></td>
+      <td class="c-actions"><div class="row-actions"><button class="ibtn" data-edit="${c.code}">${AD.icon('edit')}</button><button class="ibtn danger" data-del="${c.code}">${AD.icon('trash')}</button></div></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="8"><div class="empty">${AD.icon('tag')}<p>Brak kuponów</p></div></td></tr>`;
+}
+function renderPromos(){
+  const PST={ ACTIVE:['Aktywna','ok'], SCHEDULED:['Zaplanowana','info'], EXPIRED:['Zakończona','gray'] };
+  document.getElementById('promos').innerHTML = AD.promotions.map(p=>`
+    <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--ink-150)">
+      <span class="kpi-ic amber" style="width:38px;height:38px">${AD.icon('tag')}</span>
+      <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px">${AD.esc(p.name)}</div><div class="small muted">${p.type} · ${p.scope}</div></div>
+      <div class="small muted" style="white-space:nowrap">${p.from.slice(5)} – ${p.to.slice(5)}</div>
+      <span class="pill pill-${PST[p.status][1]}">${PST[p.status][0]}</span>
+      <button class="ibtn" data-pedit="${AD.esc(p.name)}">${AD.icon('edit')}</button>
+    </div>`).join('');
+}
+document.getElementById('statusSeg').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;state.f=b.dataset.f;render();});
+document.querySelector('.content').addEventListener('click',e=>{
+  const cp=e.target.closest('[data-copy]'); if(cp){ AD.toast('Skopiowano kod: '+cp.dataset.copy,'ok'); return; }
+  const ed=e.target.closest('[data-edit]'); if(ed){ openCoupon(AD.coupons.find(c=>c.code===ed.dataset.edit)); return; }
+  const del=e.target.closest('[data-del]'); if(del){ AD.toast('Kupon usunięty','bad'); return; }
+  if(e.target.closest('[data-pedit]')){ AD.toast('Edycja promocji'); return; }
+});
+document.getElementById('newBtn').addEventListener('click',()=>openCoupon(null));
+document.getElementById('newPromo').addEventListener('click',()=>AD.toast('Kreator promocji'));
+
+function openCoupon(c){
+  const isNew=!c; c=c||{ code:'', type:'percent', value:'', min:'', limit:'', status:'ACTIVE', from:'2026-06-01', to:'2026-12-31', desc:'' };
+  AD.openDrawer(`
+    <div class="drawer-head"><div><h3>${isNew?'Nowy kupon':'Edytuj kupon'}</h3><div class="dh-sub">${isNew?'Utwórz kod rabatowy':c.code}</div></div><button class="ibtn" data-close-drawer>${AD.icon('x')}</button></div>
+    <div class="drawer-body">
+      <div class="field"><label>Kod kuponu</label><input class="input mono" id="cCode" value="${AD.esc(c.code)}" placeholder="np. LATO2026" style="text-transform:uppercase"></div>
+      <div class="field"><label>Opis</label><input class="input" value="${AD.esc(c.desc)}" placeholder="Krótki opis promocji"></div>
+      <div class="field-row">
+        <div class="field"><label>Typ rabatu</label><select class="selectbox full input" id="cType"><option value="percent" ${c.type==='percent'?'selected':''}>Procent (%)</option><option value="fixed" ${c.type==='fixed'?'selected':''}>Kwota (zł)</option><option value="shipping" ${c.type==='shipping'?'selected':''}>Darmowa dostawa</option></select></div>
+        <div class="field"><label>Wartość</label><input class="input" value="${c.value}" placeholder="np. 10"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Min. wartość koszyka (zł)</label><input class="input" value="${c.min||''}" placeholder="0 = bez limitu"></div>
+        <div class="field"><label>Limit użyć</label><input class="input" value="${c.limit||''}" placeholder="∞"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Od</label><input class="input" type="date" value="${c.from}"></div>
+        <div class="field"><label>Do</label><input class="input" type="date" value="${c.to}"></div>
+      </div>
+      <div class="field" style="margin-bottom:0"><label class="switch"><input type="checkbox" ${c.status==='ACTIVE'?'checked':''}><span class="tr"></span> Kupon aktywny</label></div>
+    </div>
+    <div class="drawer-foot"><button class="btn btn-ghost" data-close-drawer>Anuluj</button><button class="btn btn-primary" id="saveCoupon">${isNew?'Utwórz kupon':'Zapisz'}</button></div>`);
+  document.getElementById('adDrawer').querySelector('#saveCoupon').addEventListener('click',()=>{ AD.closeDrawer(); AD.toast(isNew?'Kupon utworzony':'Kupon zaktualizowany','ok'); });
+}
+render(); renderPromos();
+</script>
+</body>
+</html>

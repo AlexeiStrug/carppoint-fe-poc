@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opinie — CarpPoint Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+<style>
+.rev-stars { color:#E8A013; letter-spacing:2px; font-size:14px; }
+.rev-stars .off { color:var(--ink-200); }
+.rev-card { background:#fff; border:1px solid var(--ink-200); border-radius:var(--r-lg); padding:18px 20px; margin-bottom:14px; }
+.rev-card.pending { border-left:3px solid var(--warn-700); }
+.rev-top { display:flex; align-items:flex-start; gap:12px; margin-bottom:10px; }
+.rev-prod { font-size:12px; color:var(--brand-700); font-weight:700; }
+.rev-body { font-size:14px; color:var(--ink-700); line-height:1.6; margin:6px 0 12px; }
+.rev-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--ink-500); }
+.rev-actions { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+.rev-reply { background:var(--brand-50); border:1px solid var(--brand-100); border-radius:var(--r-md); padding:12px 14px; margin-top:12px; font-size:13px; }
+.rev-reply b { color:var(--brand-800); }
+</style>
+</head>
+<body>
+<div class="admin">
+  <aside class="sidebar"></aside>
+  <div class="workspace">
+    <header class="topbar"></header>
+    <main class="content">
+      <div class="page-head">
+        <div><h1>Opinie</h1><p class="ph-sub">Moderacja recenzji produktów</p></div>
+      </div>
+      <div class="kpi-row" id="miniKpi" style="margin-bottom:20px"></div>
+      <div class="card">
+        <div class="toolbar">
+          <div class="seg" id="statusSeg"></div>
+          <div class="grow"></div>
+          <div class="tb-find" id="find"><input placeholder="Szukaj w treści lub autorze…" id="q"></div>
+        </div>
+        <div class="card-pad" id="list"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="admin-data.js"></script>
+<script src="admin.js"></script>
+<script>
+AD.mount('reviews','Opinie');
+document.getElementById('find').insertAdjacentHTML('afterbegin', AD.icon('search'));
+const state={ f:'PENDING', q:'' };
+const SM={ PENDING:['Oczekuje','warn'], APPROVED:['Zatwierdzona','ok'], REJECTED:['Odrzucona','bad'] };
+
+function counts(){ return { PENDING:AD.reviews.filter(r=>r.status==='PENDING').length, APPROVED:AD.reviews.filter(r=>r.status==='APPROVED').length, REJECTED:AD.reviews.filter(r=>r.status==='REJECTED').length, all:AD.reviews.length }; }
+function renderKpi(){
+  const c=counts();
+  const avg=(AD.reviews.reduce((s,r)=>s+r.rating,0)/AD.reviews.length).toFixed(1);
+  document.getElementById('miniKpi').innerHTML=[
+    ['amber','star','Oczekuje moderacji',c.PENDING],
+    ['green','check','Zatwierdzone',c.APPROVED],
+    ['blue','star','Średnia ocena',avg.replace('.',',')+' / 5'],
+    ['purple','star','Wszystkie opinie',c.all],
+  ].map(([col,i,l,v])=>`<div class="kpi"><div class="kpi-top"><div class="kpi-ic ${col}">${AD.icon(i)}</div></div><div class="kpi-label">${l}</div><div class="kpi-value" style="font-size:23px">${v}</div></div>`).join('');
+}
+function renderSeg(){
+  const c=counts();
+  const segs=[['PENDING','Oczekujące',c.PENDING],['APPROVED','Zatwierdzone',c.APPROVED],['REJECTED','Odrzucone',c.REJECTED],['all','Wszystkie',c.all]];
+  document.getElementById('statusSeg').innerHTML = segs.map(([f,l,n])=>`<button data-f="${f}" class="${f===state.f?'active':''}">${l} <span class="cnt">${n}</span></button>`).join('');
+}
+function stars(n){ return '<span class="rev-stars">'+'★'.repeat(n)+'<span class="off">'+'★'.repeat(5-n)+'</span></span>'; }
+
+function render(){
+  renderSeg(); renderKpi();
+  let l=AD.reviews.slice();
+  if(state.f!=='all') l=l.filter(r=>r.status===state.f);
+  if(state.q){ const q=state.q.toLowerCase(); l=l.filter(r=>r.body.toLowerCase().includes(q)||r.author.toLowerCase().includes(q)||r.product.toLowerCase().includes(q)); }
+  const el=document.getElementById('list');
+  if(!l.length){ el.innerHTML=`<div class="empty">${AD.icon('check')}<p>Brak opinii w tej kategorii</p></div>`; return; }
+  el.innerHTML = l.map(r=>`
+    <div class="rev-card ${r.status==='PENDING'?'pending':''}" data-id="${r.id}">
+      <div class="rev-top">
+        <span class="sb-av" style="width:38px;height:38px;font-size:13px;background:var(--brand-100);color:var(--brand-800)">${AD.initials(r.author)}</span>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><b style="font-size:14px">${r.author}</b>${r.verified?'<span class="pill pill-brand no-dot" style="font-size:10px">Zakup potwierdzony</span>':'<span class="pill pill-gray no-dot" style="font-size:10px">Niezweryfikowany</span>'}</div>
+          <div class="rev-prod">${AD.esc(r.product)}</div>
+        </div>
+        <span class="pill pill-${SM[r.status][1]}">${SM[r.status][0]}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">${stars(r.rating)}<b style="font-size:13.5px">${AD.esc(r.title)}</b></div>
+      <div class="rev-body">${AD.esc(r.body)}</div>
+      <div class="rev-meta">${AD.icon('cal','')}<span style="display:inline-flex;align-items:center;gap:5px">${r.date}</span> · <span>${r.email}</span> · <span>${r.helpful} pomocnych</span></div>
+      ${r.reply?`<div class="rev-reply"><b>Odpowiedź sklepu:</b> ${AD.esc(r.reply)}</div>`:''}
+      <div class="rev-actions">
+        ${r.status!=='APPROVED'?`<button class="btn btn-primary btn-sm" data-act="approve" data-id="${r.id}">${AD.icon('check')} Zatwierdź</button>`:''}
+        ${r.status!=='REJECTED'?`<button class="btn btn-danger btn-sm" data-act="reject" data-id="${r.id}">${AD.icon('x')} Odrzuć</button>`:''}
+        <button class="btn btn-outline btn-sm" data-act="reply" data-id="${r.id}">${AD.icon('reply')} Odpowiedz</button>
+      </div>
+    </div>`).join('');
+  // fix calendar icon size
+  el.querySelectorAll('.rev-meta svg').forEach(s=>{ s.style.width='13px'; s.style.height='13px'; s.style.verticalAlign='-2px'; });
+}
+
+document.getElementById('statusSeg').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;state.f=b.dataset.f;render();});
+document.getElementById('q').addEventListener('input',e=>{state.q=e.target.value;render();});
+document.getElementById('list').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b)return;
+  const r=AD.reviews.find(x=>x.id===+b.dataset.id);
+  if(b.dataset.act==='approve'){ r.status='APPROVED'; AD.toast('Opinia zatwierdzona — widoczna w sklepie','ok'); render(); }
+  else if(b.dataset.act==='reject'){ r.status='REJECTED'; AD.toast('Opinia odrzucona','bad'); render(); }
+  else if(b.dataset.act==='reply'){ openReply(r); }
+});
+
+function openReply(r){
+  AD.openDrawer(`
+    <div class="drawer-head"><div><h3>Odpowiedź na opinię</h3><div class="dh-sub">${AD.esc(r.product)}</div></div><button class="ibtn" data-close-drawer>${AD.icon('x')}</button></div>
+    <div class="drawer-body">
+      <div class="rev-card" style="margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><b>${r.author}</b>${stars(r.rating)}</div>
+        <div class="rev-body" style="margin:0">${AD.esc(r.body)}</div>
+      </div>
+      <div class="field" style="margin-bottom:0"><label>Twoja odpowiedź (publiczna)</label><textarea class="input" id="replyTxt" placeholder="Dziękujemy za opinię…" style="min-height:120px">${AD.esc(r.reply||'')}</textarea></div>
+    </div>
+    <div class="drawer-foot"><button class="btn btn-ghost" data-close-drawer>Anuluj</button><button class="btn btn-primary" id="saveReply">Opublikuj odpowiedź</button></div>`);
+  document.getElementById('adDrawer').querySelector('#saveReply').addEventListener('click',()=>{ r.reply=document.getElementById('replyTxt').value; AD.closeDrawer(); AD.toast('Odpowiedź opublikowana','ok'); render(); });
+}
+render();
+</script>
+</body>
+</html>

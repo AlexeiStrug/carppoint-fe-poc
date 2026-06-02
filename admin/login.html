@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logowanie — CarpPoint Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+<style>
+body { background:var(--brand-900); }
+.login-wrap { min-height:100vh; display:grid; grid-template-columns:1fr 1fr; }
+@media (max-width:860px){ .login-wrap { grid-template-columns:1fr; } .login-aside { display:none; } }
+.login-aside { position:relative; overflow:hidden; padding:48px; display:flex; flex-direction:column; justify-content:space-between; color:#fff; }
+.login-aside .ph-dark { position:absolute; inset:0; z-index:0; }
+.login-aside::after { content:""; position:absolute; inset:0; background:linear-gradient(135deg,rgba(17,38,28,.7),rgba(27,67,50,.85)); z-index:1; }
+.login-aside > * { position:relative; z-index:2; }
+.la-logo { display:flex; align-items:center; gap:12px; }
+.la-logo .m { width:44px; height:44px; border-radius:11px; background:rgba(255,255,255,.14); display:grid; place-items:center; }
+.la-logo .m svg { width:26px; height:26px; }
+.la-logo b { font-family:var(--font-display); font-size:22px; font-weight:800; }
+.la-logo span { font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--brand-200); font-family:var(--font-mono); display:block; }
+.la-quote h2 { color:#fff; font-size:clamp(26px,3vw,36px); max-width:18ch; line-height:1.1; }
+.la-quote p { color:var(--brand-100); margin-top:14px; max-width:36ch; }
+.la-feats { display:flex; gap:24px; }
+.la-feats div b { font-family:var(--font-display); font-size:22px; display:block; }
+.la-feats div span { font-size:12px; color:var(--brand-200); }
+
+.login-main { background:var(--ink-50); display:flex; align-items:center; justify-content:center; padding:32px; }
+.login-card { width:100%; max-width:380px; }
+.login-card h1 { font-size:28px; margin-bottom:6px; }
+.login-card .sub { color:var(--ink-500); margin-bottom:28px; }
+.login-card .field { margin-bottom:18px; }
+.login-card .input { padding:12px 14px; font-size:14px; }
+.forgot { font-size:12.5px; color:var(--brand-700); font-weight:600; float:right; }
+.twofa { background:#fff; border:1px solid var(--ink-200); border-radius:var(--r-md); padding:12px 14px; display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--ink-600); margin-top:18px; }
+.twofa svg { width:18px; height:18px; color:var(--brand-700); flex:none; }
+.login-foot { text-align:center; margin-top:24px; font-size:12.5px; color:var(--ink-400); }
+.otp-row { display:flex; gap:8px; }
+.otp-row input { flex:1; text-align:center; font-size:20px; font-weight:700; font-family:var(--font-mono); padding:12px 0; }
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <aside class="login-aside">
+    <div class="ph-dark" data-label="lifestyle: świt nad jeziorem"></div>
+    <div class="la-logo"><span class="m" id="laMark"></span><span><b>CarpPoint</b><span>panel administracyjny</span></span></div>
+    <div class="la-quote">
+      <h2>Zarządzaj sklepem z jednego miejsca</h2>
+      <p>Zamówienia, magazyn, klienci i analityka — wszystko w jednym, szybkim panelu.</p>
+    </div>
+    <div class="la-feats">
+      <div><b>2 500+</b><span>produktów</span></div>
+      <div><b>38</b><span>zamówień dziś</span></div>
+      <div><b>4,8★</b><span>ocena sklepu</span></div>
+    </div>
+  </aside>
+
+  <main class="login-main">
+    <div class="login-card">
+      <!-- step 1: credentials -->
+      <div id="step1">
+        <h1>Zaloguj się</h1>
+        <p class="sub">Wprowadź dane służbowego konta administratora.</p>
+        <div class="field"><label>E-mail</label><input class="input" type="email" value="jan.kowalski@carppoint.pl"></div>
+        <div class="field"><label>Hasło <a href="#" class="forgot" onclick="AD.toast('Link resetujący wysłany');return false">Nie pamiętasz?</a></label><input class="input" type="password" value="••••••••••"></div>
+        <label class="switch" style="margin-bottom:18px"><input type="checkbox" checked><span class="tr"></span> Zapamiętaj mnie na tym urządzeniu</label>
+        <button class="btn btn-primary btn-block btn-lg" id="loginBtn">Zaloguj się</button>
+        <div class="twofa" id="twofaNote"></div>
+      </div>
+
+      <!-- step 2: 2FA -->
+      <div id="step2" style="display:none">
+        <h1>Weryfikacja 2FA</h1>
+        <p class="sub">Wpisz 6-cyfrowy kod z aplikacji Google Authenticator.</p>
+        <div class="otp-row" id="otp">
+          <input class="input" maxlength="1" inputmode="numeric">
+          <input class="input" maxlength="1" inputmode="numeric">
+          <input class="input" maxlength="1" inputmode="numeric">
+          <input class="input" maxlength="1" inputmode="numeric">
+          <input class="input" maxlength="1" inputmode="numeric">
+          <input class="input" maxlength="1" inputmode="numeric">
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" id="verifyBtn" style="margin-top:20px">Zweryfikuj i wejdź</button>
+        <button class="btn btn-ghost btn-block" id="backBtn" style="margin-top:8px">Wstecz</button>
+      </div>
+
+      <div class="login-foot">© 2026 CarpPoint.pl · Dostęp tylko dla autoryzowanego personelu</div>
+    </div>
+  </main>
+</div>
+
+<script src="admin-data.js"></script>
+<script src="admin.js"></script>
+<script>
+document.getElementById('laMark').innerHTML = AD.icon('drop');
+document.getElementById('twofaNote').innerHTML = AD.icon('shield')+'<span>To konto ma rolę <b>SUPER_ADMIN</b> — wymagane uwierzytelnianie dwuskładnikowe (2FA).</span>';
+document.getElementById('loginBtn').addEventListener('click',()=>{ document.getElementById('step1').style.display='none'; document.getElementById('step2').style.display=''; document.querySelector('#otp input').focus(); });
+document.getElementById('backBtn').addEventListener('click',()=>{ document.getElementById('step2').style.display='none'; document.getElementById('step1').style.display=''; });
+document.getElementById('verifyBtn').addEventListener('click',()=>{ AD.toast('Zalogowano pomyślnie','ok'); setTimeout(()=>location.href='index.html',600); });
+// otp auto-advance
+const otp=document.getElementById('otp');
+otp.addEventListener('input',e=>{ if(e.target.value && e.target.nextElementSibling) e.target.nextElementSibling.focus(); });
+otp.addEventListener('keydown',e=>{ if(e.key==='Backspace'&&!e.target.value&&e.target.previousElementSibling) e.target.previousElementSibling.focus(); });
+</script>
+</body>
+</html>
